@@ -37,7 +37,6 @@
       bottom: -150px; left: -100px;
     }
 
-    /* Glass utility */
     .glass {
       background: rgba(255, 255, 255, 0.04);
       backdrop-filter: blur(20px);
@@ -59,11 +58,6 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-    }
-    .header-brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
     }
     .header-brand h1 {
       font-size: 1.4rem;
@@ -91,21 +85,15 @@
       cursor: pointer;
       transition: all 0.2s;
     }
-    .header-right select:hover {
-      border-color: rgba(255, 105, 180, 0.4);
-    }
-    .header-right select option {
-      background: #1a1a1a;
-      color: #e0e0e0;
-    }
+    .header-right select:hover { border-color: rgba(255, 105, 180, 0.4); }
+    .header-right select option { background: #1a1a1a; color: #e0e0e0; }
     .user-info {
       display: flex;
       align-items: center;
       gap: 10px;
     }
     .user-info img {
-      width: 32px;
-      height: 32px;
+      width: 32px; height: 32px;
       border-radius: 50%;
       border: 2px solid rgba(255, 105, 180, 0.4);
     }
@@ -129,7 +117,6 @@
       border-color: rgba(255, 105, 180, 0.4);
     }
 
-    /* Container */
     .container {
       max-width: 1200px;
       margin: 0 auto;
@@ -138,12 +125,45 @@
       z-index: 1;
     }
 
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 24px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 4px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 12px 20px;
+      border: none;
+      background: transparent;
+      color: #666;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      letter-spacing: 0.3px;
+    }
+    .tab-btn:hover { color: #aaa; background: rgba(255, 255, 255, 0.03); }
+    .tab-btn.active {
+      background: rgba(255, 105, 180, 0.15);
+      color: #ff69b4;
+      box-shadow: 0 2px 12px rgba(255, 105, 180, 0.1);
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
     /* Stats grid */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 16px;
-      margin-bottom: 28px;
+      margin-bottom: 24px;
     }
     @media (max-width: 768px) {
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
@@ -189,65 +209,10 @@
     .stat-warning .stat-value { color: #fbbf24; }
     .stat-inactive .stat-value { color: #f87171; }
 
-    /* Roster section */
-    .roster-section {
-      margin-bottom: 28px;
-    }
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-    .section-header h2 {
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: #fff;
-      letter-spacing: -0.3px;
-    }
-    .section-header .badge {
-      background: rgba(255, 105, 180, 0.15);
-      color: #ff69b4;
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: 600;
-    }
-
-    /* Roster cards (mobile-friendly grid instead of table) */
-    .roster-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .roster-item {
-      display: grid;
-      grid-template-columns: 2fr 1fr 0.7fr 0.7fr 0.7fr 1fr;
-      align-items: center;
-      padding: 16px 20px;
-      cursor: pointer;
-      transition: all 0.25s ease;
-      gap: 12px;
-    }
-    .roster-item:hover {
-      background: rgba(255, 255, 255, 0.06);
-      border-color: rgba(255, 105, 180, 0.15);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    }
-    .roster-item:active {
-      transform: scale(0.995);
-    }
-    @media (max-width: 768px) {
-      .roster-item {
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-      }
-    }
-
+    /* Roster table */
     .roster-head {
       display: grid;
-      grid-template-columns: 2fr 1fr 0.7fr 0.7fr 0.7fr 1fr;
+      grid-template-columns: 2.2fr 1.2fr 0.8fr 0.6fr 0.6fr 0.8fr;
       padding: 12px 20px;
       gap: 12px;
       margin-bottom: 4px;
@@ -259,25 +224,44 @@
       letter-spacing: 1px;
       color: #555;
     }
-    @media (max-width: 768px) {
-      .roster-head { display: none; }
+    @media (max-width: 900px) { .roster-head { display: none; } }
+
+    .roster-grid { display: flex; flex-direction: column; gap: 8px; }
+
+    .roster-item {
+      display: grid;
+      grid-template-columns: 2.2fr 1.2fr 0.8fr 0.6fr 0.6fr 0.8fr;
+      align-items: center;
+      padding: 14px 20px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      gap: 12px;
+    }
+    .roster-item:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 105, 180, 0.15);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+    @media (max-width: 900px) {
+      .roster-item { grid-template-columns: 1fr 1fr; gap: 8px; }
     }
 
     .lawyer-cell {
       display: flex;
       align-items: center;
       gap: 12px;
+      min-width: 0;
     }
     .lawyer-avatar {
-      width: 36px;
-      height: 36px;
+      width: 36px; height: 36px;
       border-radius: 50%;
       border: 2px solid rgba(255, 105, 180, 0.3);
       object-fit: cover;
+      flex-shrink: 0;
     }
     .lawyer-avatar-placeholder {
-      width: 36px;
-      height: 36px;
+      width: 36px; height: 36px;
       border-radius: 50%;
       background: rgba(255, 105, 180, 0.15);
       display: flex;
@@ -286,19 +270,53 @@
       font-size: 0.8rem;
       font-weight: 700;
       color: #ff69b4;
+      flex-shrink: 0;
     }
+    .lawyer-info { min-width: 0; }
     .lawyer-name {
       font-weight: 600;
       font-size: 0.9rem;
       color: #eee;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .lawyer-discord {
+      font-size: 0.72rem;
+      color: #666;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .roster-cell {
       font-size: 0.85rem;
       color: #999;
     }
-    .roster-cell strong {
-      color: #ccc;
+    .roster-cell strong { color: #ccc; font-weight: 600; }
+
+    /* Role badges */
+    .role-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .role-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 0.65rem;
       font-weight: 600;
+      border: 1px solid;
+      white-space: nowrap;
+    }
+    .role-badge-more {
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: #666;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
     }
 
     /* Status pill */
@@ -314,27 +332,36 @@
     }
     .status-pill::before {
       content: '';
-      width: 6px;
-      height: 6px;
+      width: 6px; height: 6px;
       border-radius: 50%;
     }
-    .pill-active {
-      background: rgba(52, 211, 153, 0.12);
-      color: #34d399;
-    }
+    .pill-active { background: rgba(52, 211, 153, 0.12); color: #34d399; }
     .pill-active::before { background: #34d399; }
-    .pill-warning {
-      background: rgba(251, 191, 36, 0.12);
-      color: #fbbf24;
-    }
+    .pill-warning { background: rgba(251, 191, 36, 0.12); color: #fbbf24; }
     .pill-warning::before { background: #fbbf24; }
-    .pill-inactive {
-      background: rgba(248, 113, 113, 0.12);
-      color: #f87171;
-    }
+    .pill-inactive { background: rgba(248, 113, 113, 0.12); color: #f87171; }
     .pill-inactive::before { background: #f87171; }
 
-    /* Profile Modal */
+    /* Strike badge */
+    .strike-count {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(248, 113, 113, 0.15);
+      color: #f87171;
+      font-size: 0.75rem;
+      font-weight: 700;
+      min-width: 24px;
+      height: 24px;
+      border-radius: 12px;
+      padding: 0 6px;
+    }
+    .strike-count.zero {
+      background: rgba(255, 255, 255, 0.04);
+      color: #444;
+    }
+
+    /* Modal */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -357,7 +384,7 @@
       border-radius: 24px;
       padding: 32px;
       width: 100%;
-      max-width: 580px;
+      max-width: 640px;
       max-height: 85vh;
       overflow-y: auto;
       position: relative;
@@ -461,13 +488,235 @@
       color: #aaa;
       transition: background 0.2s;
     }
-    .profile-list li:hover {
-      background: rgba(255, 255, 255, 0.04);
-    }
+    .profile-list li:hover { background: rgba(255, 255, 255, 0.04); }
     .note-date {
       color: #ff69b4;
       font-weight: 600;
       font-size: 0.78rem;
+    }
+
+    /* Inline editable fields */
+    .editable {
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 6px;
+      transition: background 0.2s;
+      border: 1px solid transparent;
+    }
+    .editable:hover {
+      background: rgba(255, 105, 180, 0.08);
+      border-color: rgba(255, 105, 180, 0.2);
+    }
+    .edit-input {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 105, 180, 0.4);
+      color: #eee;
+      font-family: inherit;
+      font-size: inherit;
+      padding: 4px 8px;
+      border-radius: 8px;
+      outline: none;
+      width: 130px;
+    }
+    .edit-input:focus {
+      box-shadow: 0 0 0 2px rgba(255, 105, 180, 0.2);
+    }
+
+    /* Activity tab */
+    .activity-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+      align-items: flex-end;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .control-group label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #555;
+    }
+    .control-input {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #e0e0e0;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .control-input:focus { border-color: rgba(255, 105, 180, 0.4); }
+    .control-input option { background: #1a1a1a; }
+    .btn-filter {
+      background: rgba(255, 105, 180, 0.15);
+      color: #ff69b4;
+      border: 1px solid rgba(255, 105, 180, 0.3);
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-filter:hover {
+      background: rgba(255, 105, 180, 0.25);
+      border-color: rgba(255, 105, 180, 0.5);
+    }
+
+    .activity-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 4px;
+    }
+    .activity-table th {
+      text-align: left;
+      padding: 10px 16px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #555;
+    }
+    .activity-table td {
+      padding: 12px 16px;
+      font-size: 0.83rem;
+      color: #aaa;
+      background: rgba(255, 255, 255, 0.02);
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    .activity-table tr td:first-child { border-left: 1px solid rgba(255,255,255,0.04); border-radius: 12px 0 0 12px; }
+    .activity-table tr td:last-child { border-right: 1px solid rgba(255,255,255,0.04); border-radius: 0 12px 12px 0; }
+    .activity-table tbody tr:hover td { background: rgba(255, 255, 255, 0.04); }
+
+    .load-more-btn {
+      display: block;
+      margin: 16px auto 0;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #888;
+      padding: 10px 28px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .load-more-btn:hover {
+      background: rgba(255, 105, 180, 0.1);
+      border-color: rgba(255, 105, 180, 0.3);
+      color: #ff69b4;
+    }
+
+    /* Ticket card */
+    .ticket-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .ticket-card {
+      padding: 16px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      transition: all 0.2s;
+    }
+    .ticket-card:hover {
+      border-color: rgba(255, 105, 180, 0.2);
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .ticket-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #eee;
+      margin-bottom: 4px;
+    }
+    .ticket-cat {
+      font-size: 0.75rem;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    .ticket-meta {
+      font-size: 0.78rem;
+      color: #888;
+    }
+
+    /* Archive tab */
+    .archive-item {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 0.8fr 0.6fr 0.8fr;
+      align-items: center;
+      padding: 14px 20px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      gap: 12px;
+    }
+    .archive-item:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 105, 180, 0.15);
+    }
+    .archive-head {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 0.8fr 0.6fr 0.8fr;
+      padding: 12px 20px;
+      gap: 12px;
+      margin-bottom: 4px;
+    }
+    .archive-head span {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #555;
+    }
+    @media (max-width: 900px) {
+      .archive-head { display: none; }
+      .archive-item { grid-template-columns: 1fr 1fr; }
+    }
+
+    .archived-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.04);
+      color: #666;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    /* Section header */
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .section-header h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.3px;
+    }
+    .badge {
+      background: rgba(255, 105, 180, 0.15);
+      color: #ff69b4;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
     }
 
     /* Loading */
@@ -487,7 +736,6 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Empty state */
     .empty-state {
       text-align: center;
       padding: 60px 20px;
@@ -495,13 +743,33 @@
     }
     .empty-state p { font-size: 0.9rem; }
 
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: rgba(20, 20, 20, 0.95);
+      border: 1px solid rgba(255, 105, 180, 0.3);
+      color: #eee;
+      padding: 12px 20px;
+      border-radius: 14px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      z-index: 200;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+      animation: toastIn 0.3s ease;
+      transition: opacity 0.3s;
+    }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
     /* Scrollbar */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb {
-      background: rgba(255, 105, 180, 0.2);
-      border-radius: 3px;
-    }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 105, 180, 0.2); border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: rgba(255, 105, 180, 0.4); }
   </style>
 </head>
@@ -521,14 +789,22 @@
   </div>
 
   <div class="container">
-    <div class="stats-grid" id="stats-bar">
-      <div class="stat-card glass"><div class="loading-spinner"></div></div>
-      <div class="stat-card glass"><div class="loading-spinner"></div></div>
-      <div class="stat-card glass"><div class="loading-spinner"></div></div>
-      <div class="stat-card glass"><div class="loading-spinner"></div></div>
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="roster">Roster</button>
+      <button class="tab-btn" data-tab="activity">Activity & Notes</button>
+      <button class="tab-btn" data-tab="archive">Archive</button>
     </div>
 
-    <div class="roster-section">
+    <!-- Tab 1: Roster -->
+    <div class="tab-content active" id="tab-roster">
+      <div class="stats-grid" id="stats-bar">
+        <div class="stat-card glass"><div class="loading-spinner"></div></div>
+        <div class="stat-card glass"><div class="loading-spinner"></div></div>
+        <div class="stat-card glass"><div class="loading-spinner"></div></div>
+        <div class="stat-card glass"><div class="loading-spinner"></div></div>
+      </div>
+
       <div class="section-header">
         <h2>Lawyer Roster</h2>
         <span class="badge" id="roster-count">Loading...</span>
@@ -536,10 +812,10 @@
 
       <div class="roster-head">
         <span>Lawyer</span>
-        <span>Last Active</span>
+        <span>Roles</span>
+        <span>Hire Date</span>
+        <span>Strikes</span>
         <span>Days</span>
-        <span>7d Msgs</span>
-        <span>30d Msgs</span>
         <span>Status</span>
       </div>
 
@@ -547,6 +823,61 @@
         <div class="loading-state">
           <div class="loading-spinner"></div>
           Loading roster...
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2: Activity & Notes -->
+    <div class="tab-content" id="tab-activity">
+      <div class="section-header">
+        <h2>Activity & Notes</h2>
+      </div>
+
+      <div class="activity-controls glass" style="padding: 20px;">
+        <div class="control-group">
+          <label>Lawyer</label>
+          <select id="activity-lawyer" class="control-input" style="min-width:180px;"></select>
+        </div>
+        <div class="control-group">
+          <label>Start Date</label>
+          <input type="date" id="filter-start" class="control-input">
+        </div>
+        <div class="control-group">
+          <label>End Date</label>
+          <input type="date" id="filter-end" class="control-input">
+        </div>
+        <div class="control-group">
+          <label>Channel</label>
+          <input type="text" id="filter-channel" class="control-input" placeholder="Filter by channel...">
+        </div>
+        <button class="btn-filter" onclick="loadActivity()">Search</button>
+      </div>
+
+      <div id="activity-sections" style="margin-top: 20px;">
+        <div class="empty-state"><p>Select a lawyer and click Search to view activity.</p></div>
+      </div>
+    </div>
+
+    <!-- Tab 3: Archive -->
+    <div class="tab-content" id="tab-archive">
+      <div class="section-header">
+        <h2>Archive</h2>
+        <span class="badge" id="archive-count">Loading...</span>
+      </div>
+
+      <div class="archive-head">
+        <span>Lawyer</span>
+        <span>Hire Date</span>
+        <span>Archived</span>
+        <span>Last Active</span>
+        <span>Strikes</span>
+        <span></span>
+      </div>
+
+      <div class="roster-grid" id="archive-body">
+        <div class="loading-state">
+          <div class="loading-spinner"></div>
+          Loading archive...
         </div>
       </div>
     </div>
@@ -568,7 +899,22 @@
   <script>
     let currentGuild = null;
     let inactivityDays = 7;
+    let rosterCache = [];
+    let activityOffset = 0;
 
+    // --- Tabs ---
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+
+        if (btn.dataset.tab === 'archive') loadArchive();
+      });
+    });
+
+    // --- Init ---
     async function init() {
       try {
         const meRes = await fetch('/api/me');
@@ -610,8 +956,23 @@
       }
     }
 
+    // --- Toast ---
+    function showToast(msg) {
+      const existing = document.querySelector('.toast');
+      if (existing) existing.remove();
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = msg;
+      document.body.appendChild(toast);
+      setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2500);
+    }
+
+    // --- Roster Tab ---
     async function loadRoster() {
       if (!currentGuild) return;
+
+      const container = document.getElementById('roster-body');
+      container.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div>Loading roster...</div>';
 
       let data;
       try {
@@ -620,11 +981,13 @@
         data = await res.json();
       } catch (err) {
         console.error('Roster error:', err);
-        document.getElementById('roster-body').innerHTML = '<div class="empty-state"><p>Failed to load roster data.</p></div>';
+        container.innerHTML = '<div class="empty-state"><p>Failed to load roster data.</p></div>';
         return;
       }
+
       inactivityDays = data.inactivityDays;
       const roster = data.roster;
+      rosterCache = roster;
 
       // Stats
       const total = roster.length;
@@ -633,142 +996,510 @@
       const inactive = roster.filter(l => l.daysSince === null || l.daysSince >= inactivityDays).length;
 
       document.getElementById('stats-bar').innerHTML = `
-        <div class="stat-card glass stat-total">
-          <div class="stat-value">${total}</div>
-          <div class="stat-label">Total Lawyers</div>
-        </div>
-        <div class="stat-card glass stat-active">
-          <div class="stat-value">${active}</div>
-          <div class="stat-label">Active</div>
-        </div>
-        <div class="stat-card glass stat-warning">
-          <div class="stat-value">${warning}</div>
-          <div class="stat-label">Warning</div>
-        </div>
-        <div class="stat-card glass stat-inactive">
-          <div class="stat-value">${inactive}</div>
-          <div class="stat-label">Inactive</div>
-        </div>
+        <div class="stat-card glass stat-total"><div class="stat-value">${total}</div><div class="stat-label">Total Lawyers</div></div>
+        <div class="stat-card glass stat-active"><div class="stat-value">${active}</div><div class="stat-label">Active</div></div>
+        <div class="stat-card glass stat-warning"><div class="stat-value">${warning}</div><div class="stat-label">Warning</div></div>
+        <div class="stat-card glass stat-inactive"><div class="stat-value">${inactive}</div><div class="stat-label">Inactive</div></div>
       `;
 
       document.getElementById('roster-count').textContent = `${total} lawyer${total !== 1 ? 's' : ''}`;
 
-      // Roster
-      const container = document.getElementById('roster-body');
+      // Populate lawyer selector on Activity tab
+      const lawyerSelect = document.getElementById('activity-lawyer');
+      lawyerSelect.innerHTML = '<option value="">-- Select --</option>';
+      roster.forEach(l => {
+        const opt = document.createElement('option');
+        opt.value = l.userId;
+        opt.textContent = l.displayName || l.discordName;
+        lawyerSelect.appendChild(opt);
+      });
+
       if (roster.length === 0) {
         container.innerHTML = '<div class="empty-state"><p>No lawyers on the roster.</p></div>';
         return;
       }
 
       container.innerHTML = roster.map(l => {
-        const pillClass = l.daysSince === null ? 'pill-inactive'
-          : l.daysSince >= inactivityDays ? 'pill-inactive'
-          : l.daysSince >= Math.floor(inactivityDays / 2) ? 'pill-warning'
-          : 'pill-active';
-        const statusText = l.daysSince === null ? 'No Activity'
-          : l.daysSince >= inactivityDays ? 'Inactive'
-          : l.daysSince >= Math.floor(inactivityDays / 2) ? 'Warning'
-          : 'Active';
-        const lastActiveText = l.lastActive
-          ? new Date(l.lastActive).toLocaleDateString()
-          : 'Never';
-        const daysText = l.daysSince !== null ? l.daysSince : 'N/A';
-        const initials = l.displayName ? l.displayName.charAt(0).toUpperCase() : '?';
+        const pillClass = getStatusClass(l.daysSince);
+        const statusText = getStatusText(l.daysSince);
+        const hireDateStr = l.hireDate ? new Date(l.hireDate).toLocaleDateString() : 'Not set';
+        const initials = (l.displayName || l.discordName || '?').charAt(0).toUpperCase();
+
+        // Show top 2 roles
+        let rolesHtml = '';
+        if (l.roles && l.roles.length > 0) {
+          const show = l.roles.slice(0, 2);
+          rolesHtml = show.map(r => {
+            const c = r.color === '#000000' ? '#666' : r.color;
+            return `<span class="role-badge" style="color:${c};border-color:${c}40;background:${c}15">${escHtml(r.name)}</span>`;
+          }).join('');
+          if (l.roles.length > 2) rolesHtml += `<span class="role-badge-more">+${l.roles.length - 2}</span>`;
+        } else {
+          rolesHtml = '<span style="color:#444;font-size:0.78rem">None</span>';
+        }
 
         return `<div class="roster-item glass" onclick="openProfile('${l.userId}')">
           <div class="lawyer-cell">
             ${l.avatar
               ? `<img class="lawyer-avatar" src="${l.avatar}" alt="">`
               : `<div class="lawyer-avatar-placeholder">${initials}</div>`}
-            <span class="lawyer-name">${l.displayName}</span>
+            <div class="lawyer-info">
+              <div class="lawyer-name">${escHtml(l.displayName || l.discordName)}</div>
+              ${l.displayName ? `<div class="lawyer-discord">${escHtml(l.discordName)}</div>` : ''}
+            </div>
           </div>
-          <div class="roster-cell">${lastActiveText}</div>
-          <div class="roster-cell"><strong>${daysText}</strong></div>
-          <div class="roster-cell"><strong>${l.activity7}</strong></div>
-          <div class="roster-cell"><strong>${l.activity30}</strong></div>
+          <div class="roster-cell"><div class="role-badges">${rolesHtml}</div></div>
+          <div class="roster-cell editable" onclick="event.stopPropagation();editHireDate('${l.userId}', this)">${hireDateStr}</div>
+          <div class="roster-cell"><span class="strike-count ${l.strikeCount === 0 ? 'zero' : ''}">${l.strikeCount}</span></div>
+          <div class="roster-cell"><strong>${l.daysSince !== null ? l.daysSince : 'N/A'}</strong></div>
           <div class="roster-cell"><span class="status-pill ${pillClass}">${statusText}</span></div>
         </div>`;
       }).join('');
     }
 
+    function getStatusClass(daysSince) {
+      if (daysSince === null) return 'pill-inactive';
+      if (daysSince >= inactivityDays) return 'pill-inactive';
+      if (daysSince >= Math.floor(inactivityDays / 2)) return 'pill-warning';
+      return 'pill-active';
+    }
+    function getStatusText(daysSince) {
+      if (daysSince === null) return 'No Activity';
+      if (daysSince >= inactivityDays) return 'Inactive';
+      if (daysSince >= Math.floor(inactivityDays / 2)) return 'Warning';
+      return 'Active';
+    }
+
+    // --- Inline edit: Hire Date ---
+    function editHireDate(userId, el) {
+      const lawyer = rosterCache.find(l => l.userId === userId);
+      const currentVal = lawyer?.hireDate ? new Date(lawyer.hireDate).toISOString().split('T')[0] : '';
+      el.innerHTML = `<input type="date" class="edit-input" value="${currentVal}" onblur="saveHireDate('${userId}', this)" onkeydown="if(event.key==='Enter')this.blur()">`;
+      el.querySelector('input').focus();
+    }
+
+    async function saveHireDate(userId, input) {
+      const val = input.value;
+      const cell = input.parentElement;
+      if (!val) {
+        const lawyer = rosterCache.find(l => l.userId === userId);
+        cell.textContent = lawyer?.hireDate ? new Date(lawyer.hireDate).toLocaleDateString() : 'Not set';
+        return;
+      }
+      try {
+        const res = await fetch(`/api/roster/${currentGuild}/${userId}/hire-date`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ hireDate: val })
+        });
+        if (!res.ok) throw new Error();
+        const lawyer = rosterCache.find(l => l.userId === userId);
+        if (lawyer) lawyer.hireDate = val;
+        cell.textContent = new Date(val).toLocaleDateString();
+        showToast('Hire date updated');
+      } catch {
+        cell.textContent = 'Error';
+        showToast('Failed to save hire date');
+      }
+    }
+
+    // --- Profile Modal ---
     async function openProfile(userId) {
       const modal = document.getElementById('profile-modal');
       const content = document.getElementById('profile-content');
       content.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div>Loading profile...</div>';
       modal.classList.add('active');
 
-      const p = await fetch(`/api/profile/${currentGuild}/${userId}`).then(r => r.json());
+      try {
+        const p = await fetch(`/api/profile/${currentGuild}/${userId}`).then(r => r.json());
+        const rosterLawyer = rosterCache.find(l => l.userId === userId);
+        const lastActiveText = p.lastActive ? new Date(p.lastActive).toLocaleString() : 'Never';
 
-      const lastActiveText = p.lastActive
-        ? new Date(p.lastActive).toLocaleString()
-        : 'Never';
+        let html = `
+          <div class="profile-header">
+            ${p.avatar ? `<img class="profile-avatar" src="${p.avatar}" alt="">` : ''}
+            <div>
+              <div class="profile-name">
+                <span class="editable" onclick="editDisplayName('${userId}', this)">${escHtml(rosterLawyer?.displayName || p.displayName)}</span>
+              </div>
+              <div class="profile-sub">${escHtml(p.username)}</div>
+            </div>
+          </div>
 
-      let html = `
-        <div class="profile-header">
-          ${p.avatar ? `<img class="profile-avatar" src="${p.avatar}" alt="">` : ''}
-          <div>
-            <div class="profile-name">${p.displayName}</div>
-            <div class="profile-sub">${p.username}</div>
+          <div class="profile-stats-grid">
+            <div class="profile-stat-card">
+              <div class="profile-stat-val">${p.daysSince !== null ? p.daysSince : 'N/A'}</div>
+              <div class="profile-stat-lbl">Days Inactive</div>
+            </div>
+            <div class="profile-stat-card">
+              <div class="profile-stat-val">${p.activity7}</div>
+              <div class="profile-stat-lbl">7d Messages</div>
+            </div>
+            <div class="profile-stat-card">
+              <div class="profile-stat-val">${p.activity30}</div>
+              <div class="profile-stat-lbl">30d Messages</div>
+            </div>
           </div>
-        </div>
-        <div class="profile-stats-grid">
-          <div class="profile-stat-card">
-            <div class="profile-stat-val">${p.daysSince !== null ? p.daysSince : 'N/A'}</div>
-            <div class="profile-stat-lbl">Days Inactive</div>
+          <div class="profile-stats-grid" style="grid-template-columns: 1fr 1fr;">
+            <div class="profile-stat-card">
+              <div class="profile-stat-val">${p.activity14}</div>
+              <div class="profile-stat-lbl">14d Messages</div>
+            </div>
+            <div class="profile-stat-card">
+              <div class="profile-stat-val" style="font-size:0.9rem">${lastActiveText}</div>
+              <div class="profile-stat-lbl">Last Active</div>
+            </div>
           </div>
-          <div class="profile-stat-card">
-            <div class="profile-stat-val">${p.activity7}</div>
-            <div class="profile-stat-lbl">7d Messages</div>
-          </div>
-          <div class="profile-stat-card">
-            <div class="profile-stat-val">${p.activity14}</div>
-            <div class="profile-stat-lbl">14d Messages</div>
-          </div>
-        </div>
-        <div class="profile-stats-grid">
-          <div class="profile-stat-card">
-            <div class="profile-stat-val">${p.activity30}</div>
-            <div class="profile-stat-lbl">30d Messages</div>
-          </div>
-          <div class="profile-stat-card" style="grid-column: span 2">
-            <div class="profile-stat-val" style="font-size:0.95rem">${lastActiveText}</div>
-            <div class="profile-stat-lbl">Last Active</div>
-          </div>
-        </div>
-      `;
+        `;
 
-      if (p.recent.length > 0) {
-        html += `<div class="profile-section-title">Recent Activity</div><ul class="profile-list">`;
-        p.recent.forEach(r => {
-          const time = new Date(r.logged_at).toLocaleString();
-          html += `<li>#${r.channel_name} &mdash; ${time}</li>`;
-        });
-        html += '</ul>';
+        // Roles
+        if (rosterLawyer?.roles?.length > 0) {
+          html += `<div class="profile-section-title">Roles</div><div class="role-badges" style="gap:6px;margin-bottom:10px;">`;
+          rosterLawyer.roles.forEach(r => {
+            const c = r.color === '#000000' ? '#666' : r.color;
+            html += `<span class="role-badge" style="color:${c};border-color:${c}40;background:${c}15;font-size:0.75rem;padding:4px 10px">${escHtml(r.name)}</span>`;
+          });
+          html += '</div>';
+        }
+
+        // Strikes
+        if (p.strikes && p.strikes.length > 0) {
+          html += `<div class="profile-section-title">Strikes (${p.strikes.length})</div><ul class="profile-list">`;
+          p.strikes.forEach(s => {
+            const time = new Date(s.created_at).toLocaleDateString();
+            html += `<li><span class="note-date">${time}</span> &mdash; ${escHtml(s.reason)}</li>`;
+          });
+          html += '</ul>';
+        }
+
+        // Recent activity
+        if (p.recent.length > 0) {
+          html += `<div class="profile-section-title">Recent Activity</div><ul class="profile-list">`;
+          p.recent.forEach(r => {
+            const time = new Date(r.logged_at).toLocaleString();
+            html += `<li>#${escHtml(r.channel_name)} &mdash; ${time}</li>`;
+          });
+          html += '</ul>';
+        }
+
+        // Notes
+        if (p.notes.length > 0) {
+          html += `<div class="profile-section-title">Notes</div><ul class="profile-list">`;
+          p.notes.forEach(n => {
+            const time = new Date(n.created_at).toLocaleDateString();
+            html += `<li><span class="note-date">${time}</span> &mdash; ${escHtml(n.note)}</li>`;
+          });
+          html += '</ul>';
+        }
+
+        content.innerHTML = html;
+      } catch (err) {
+        console.error('Profile error:', err);
+        content.innerHTML = '<div class="empty-state"><p>Failed to load profile.</p></div>';
       }
+    }
 
-      if (p.notes.length > 0) {
-        html += `<div class="profile-section-title">Notes</div><ul class="profile-list">`;
-        p.notes.forEach(n => {
-          const time = new Date(n.created_at).toLocaleDateString();
-          html += `<li><span class="note-date">${time}</span> &mdash; ${n.note}</li>`;
-        });
-        html += '</ul>';
+    // --- Inline edit: Display Name (in modal) ---
+    function editDisplayName(userId, el) {
+      const current = el.textContent;
+      el.innerHTML = `<input type="text" class="edit-input" value="${escAttr(current)}" onblur="saveDisplayName('${userId}', this)" onkeydown="if(event.key==='Enter')this.blur()" style="width:200px;font-size:1.2rem;font-weight:700;">`;
+      el.querySelector('input').focus();
+    }
+
+    async function saveDisplayName(userId, input) {
+      const val = input.value.trim();
+      const span = input.parentElement;
+      if (!val) {
+        span.textContent = rosterCache.find(l => l.userId === userId)?.displayName || 'Unknown';
+        return;
       }
-
-      content.innerHTML = html;
+      try {
+        const res = await fetch(`/api/roster/${currentGuild}/${userId}/display-name`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ displayName: val })
+        });
+        if (!res.ok) throw new Error();
+        const lawyer = rosterCache.find(l => l.userId === userId);
+        if (lawyer) lawyer.displayName = val;
+        span.textContent = val;
+        showToast('Name updated');
+      } catch {
+        span.textContent = rosterCache.find(l => l.userId === userId)?.displayName || 'Unknown';
+        showToast('Failed to save name');
+      }
     }
 
     function closeModal() {
       document.getElementById('profile-modal').classList.remove('active');
     }
-
     document.getElementById('profile-modal').addEventListener('click', (e) => {
       if (e.target === e.currentTarget) closeModal();
     });
-
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') closeModal();
     });
+
+    // --- Activity & Notes Tab ---
+    async function loadActivity() {
+      const userId = document.getElementById('activity-lawyer').value;
+      if (!userId) { showToast('Select a lawyer first'); return; }
+
+      activityOffset = 0;
+      const sections = document.getElementById('activity-sections');
+      sections.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div>Loading...</div>';
+
+      try {
+        const [activityData, tickets, strikes, notes] = await Promise.all([
+          fetchActivity(userId),
+          fetch(`/api/tickets/${currentGuild}/${userId}`).then(r => r.json()),
+          fetch(`/api/strikes/${currentGuild}/${userId}`).then(r => r.json()),
+          fetch(`/api/profile/${currentGuild}/${userId}`).then(r => r.json()).then(p => p.notes)
+        ]);
+
+        let html = '';
+
+        // Strikes section
+        html += `<div class="profile-section-title" style="margin-top:0">Strikes (${strikes.length})</div>`;
+        if (strikes.length > 0) {
+          html += '<ul class="profile-list">';
+          strikes.forEach(s => {
+            const time = new Date(s.created_at).toLocaleDateString();
+            html += `<li><span class="note-date">${time}</span> &mdash; ${escHtml(s.reason)}</li>`;
+          });
+          html += '</ul>';
+        } else {
+          html += '<div style="color:#444;font-size:0.85rem;padding:8px 0;">No strikes</div>';
+        }
+
+        // Tickets section
+        html += `<div class="profile-section-title">Active Tickets (${tickets.length})</div>`;
+        if (tickets.length > 0) {
+          html += '<div class="ticket-grid">';
+          tickets.forEach(t => {
+            const time = new Date(t.lastMessageAt).toLocaleDateString();
+            html += `<div class="ticket-card">
+              <div class="ticket-name">#${escHtml(t.channelName)}</div>
+              <div class="ticket-cat">${escHtml(t.categoryName)}</div>
+              <div class="ticket-meta">${t.messageCount} message${t.messageCount !== 1 ? 's' : ''} &middot; Last: ${time}</div>
+            </div>`;
+          });
+          html += '</div>';
+        } else {
+          html += '<div style="color:#444;font-size:0.85rem;padding:8px 0;">No active tickets</div>';
+        }
+
+        // Notes section
+        html += `<div class="profile-section-title">Notes (${notes.length})</div>`;
+        if (notes.length > 0) {
+          html += '<ul class="profile-list">';
+          notes.forEach(n => {
+            const time = new Date(n.created_at).toLocaleDateString();
+            html += `<li><span class="note-date">${time}</span> &mdash; ${escHtml(n.note)}</li>`;
+          });
+          html += '</ul>';
+        } else {
+          html += '<div style="color:#444;font-size:0.85rem;padding:8px 0;">No notes</div>';
+        }
+
+        // Activity log
+        html += `<div class="profile-section-title">Activity Log</div>`;
+        html += renderActivityTable(activityData);
+
+        if (activityData.length >= 50) {
+          html += `<button class="load-more-btn" onclick="loadMoreActivity('${userId}')">Load More</button>`;
+        }
+
+        sections.innerHTML = html;
+      } catch (err) {
+        console.error('Activity load error:', err);
+        sections.innerHTML = '<div class="empty-state"><p>Failed to load activity data.</p></div>';
+      }
+    }
+
+    async function fetchActivity(userId) {
+      const params = new URLSearchParams();
+      const start = document.getElementById('filter-start').value;
+      const end = document.getElementById('filter-end').value;
+      const channel = document.getElementById('filter-channel').value;
+      if (start) params.set('startDate', start);
+      if (end) params.set('endDate', end);
+      if (channel) params.set('channel', channel);
+      params.set('limit', '50');
+      params.set('offset', activityOffset.toString());
+
+      const res = await fetch(`/api/activity/${currentGuild}/${userId}?${params}`);
+      return res.json();
+    }
+
+    function renderActivityTable(data) {
+      if (data.length === 0) return '<div style="color:#444;font-size:0.85rem;padding:8px 0;">No activity found</div>';
+      let html = `<table class="activity-table"><thead><tr>
+        <th>Channel</th><th>Date</th><th>Time</th>
+      </tr></thead><tbody>`;
+      data.forEach(a => {
+        const d = new Date(a.logged_at);
+        html += `<tr>
+          <td>#${escHtml(a.channel_name || 'unknown')}</td>
+          <td>${d.toLocaleDateString()}</td>
+          <td>${d.toLocaleTimeString()}</td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      return html;
+    }
+
+    async function loadMoreActivity(userId) {
+      activityOffset += 50;
+      try {
+        const moreData = await fetchActivity(userId);
+        const table = document.querySelector('.activity-table tbody');
+        if (table) {
+          moreData.forEach(a => {
+            const d = new Date(a.logged_at);
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>#${escHtml(a.channel_name || 'unknown')}</td>
+              <td>${d.toLocaleDateString()}</td>
+              <td>${d.toLocaleTimeString()}</td>
+            `;
+            table.appendChild(row);
+          });
+        }
+        // Remove or keep load more button
+        const btn = document.querySelector('.load-more-btn');
+        if (moreData.length < 50 && btn) btn.remove();
+      } catch (err) {
+        showToast('Failed to load more activity');
+      }
+    }
+
+    // --- Archive Tab ---
+    async function loadArchive() {
+      if (!currentGuild) return;
+      const container = document.getElementById('archive-body');
+      container.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div>Loading archive...</div>';
+
+      try {
+        const res = await fetch(`/api/archive/${currentGuild}`);
+        if (!res.ok) throw new Error();
+        const archived = await res.json();
+
+        document.getElementById('archive-count').textContent = `${archived.length} archived`;
+
+        if (archived.length === 0) {
+          container.innerHTML = '<div class="empty-state"><p>No archived lawyers.</p></div>';
+          return;
+        }
+
+        container.innerHTML = archived.map(l => {
+          const hireDateStr = l.hireDate ? new Date(l.hireDate).toLocaleDateString() : 'Unknown';
+          const archivedStr = l.archivedAt ? new Date(l.archivedAt).toLocaleDateString() : 'Unknown';
+          const lastActiveStr = l.lastActive ? new Date(l.lastActive).toLocaleDateString() : 'Never';
+          const initials = (l.displayName || '?').charAt(0).toUpperCase();
+
+          return `<div class="archive-item glass" onclick="openArchiveProfile('${l.userId}')">
+            <div class="lawyer-cell">
+              ${l.avatar
+                ? `<img class="lawyer-avatar" src="${l.avatar}" alt="">`
+                : `<div class="lawyer-avatar-placeholder">${initials}</div>`}
+              <div class="lawyer-info">
+                <div class="lawyer-name">${escHtml(l.displayName)}</div>
+                <div class="lawyer-discord">${escHtml(l.username)}</div>
+              </div>
+            </div>
+            <div class="roster-cell">${hireDateStr}</div>
+            <div class="roster-cell">${archivedStr}</div>
+            <div class="roster-cell">${lastActiveStr}</div>
+            <div class="roster-cell"><span class="strike-count ${l.strikeCount === 0 ? 'zero' : ''}">${l.strikeCount}</span></div>
+            <div class="roster-cell"><span class="archived-badge">Archived</span></div>
+          </div>`;
+        }).join('');
+      } catch (err) {
+        console.error('Archive error:', err);
+        container.innerHTML = '<div class="empty-state"><p>Failed to load archive.</p></div>';
+      }
+    }
+
+    async function openArchiveProfile(userId) {
+      const modal = document.getElementById('profile-modal');
+      const content = document.getElementById('profile-content');
+      content.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div>Loading profile...</div>';
+      modal.classList.add('active');
+
+      try {
+        const p = await fetch(`/api/archive/${currentGuild}/${userId}`).then(r => r.json());
+        const lastActiveText = p.lastActive ? new Date(p.lastActive).toLocaleString() : 'Never';
+
+        let html = `
+          <div class="profile-header">
+            ${p.avatar ? `<img class="profile-avatar" src="${p.avatar}" alt="">` : ''}
+            <div>
+              <div class="profile-name">${escHtml(p.displayName)}</div>
+              <div class="profile-sub">${escHtml(p.username)} <span class="archived-badge" style="margin-left:8px">Archived</span></div>
+            </div>
+          </div>
+
+          <div class="profile-stats-grid">
+            <div class="profile-stat-card">
+              <div class="profile-stat-val">${p.activity7}</div>
+              <div class="profile-stat-lbl">7d Messages</div>
+            </div>
+            <div class="profile-stat-card">
+              <div class="profile-stat-val">${p.activity30}</div>
+              <div class="profile-stat-lbl">30d Messages</div>
+            </div>
+            <div class="profile-stat-card">
+              <div class="profile-stat-val" style="font-size:0.9rem">${lastActiveText}</div>
+              <div class="profile-stat-lbl">Last Active</div>
+            </div>
+          </div>
+        `;
+
+        if (p.strikes.length > 0) {
+          html += `<div class="profile-section-title">Strikes (${p.strikes.length})</div><ul class="profile-list">`;
+          p.strikes.forEach(s => {
+            const time = new Date(s.created_at).toLocaleDateString();
+            html += `<li><span class="note-date">${time}</span> &mdash; ${escHtml(s.reason)}</li>`;
+          });
+          html += '</ul>';
+        }
+
+        if (p.recent.length > 0) {
+          html += `<div class="profile-section-title">Activity History</div><ul class="profile-list">`;
+          p.recent.forEach(r => {
+            const time = new Date(r.logged_at).toLocaleString();
+            html += `<li>#${escHtml(r.channel_name)} &mdash; ${time}</li>`;
+          });
+          html += '</ul>';
+        }
+
+        if (p.notes.length > 0) {
+          html += `<div class="profile-section-title">Notes</div><ul class="profile-list">`;
+          p.notes.forEach(n => {
+            const time = new Date(n.created_at).toLocaleDateString();
+            html += `<li><span class="note-date">${time}</span> &mdash; ${escHtml(n.note)}</li>`;
+          });
+          html += '</ul>';
+        }
+
+        content.innerHTML = html;
+      } catch (err) {
+        console.error('Archive profile error:', err);
+        content.innerHTML = '<div class="empty-state"><p>Failed to load archived profile.</p></div>';
+      }
+    }
+
+    // --- Helpers ---
+    function escHtml(str) {
+      if (!str) return '';
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+    function escAttr(str) {
+      return (str || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
 
     init();
   </script>

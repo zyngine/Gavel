@@ -45,11 +45,6 @@ const commands = [
         .setDescription('List all monitored channels and categories')
     )
     .addSubcommand(sub =>
-      sub.setName('dashboard-role')
-        .setDescription('Set which role can access the web dashboard')
-        .addRoleOption(opt => opt.setName('role').setDescription('The role that grants dashboard access').setRequired(true))
-    )
-    .addSubcommand(sub =>
       sub.setName('roster-role')
         .setDescription('Add a role that auto-populates the lawyer roster')
         .addRoleOption(opt => opt.setName('role').setDescription('The role to sync to the roster').setRequired(true))
@@ -62,6 +57,38 @@ const commands = [
     .addSubcommand(sub =>
       sub.setName('list-roster-roles')
         .setDescription('List all roles that auto-populate the roster')
+    )
+    .addSubcommand(sub =>
+      sub.setName('add-dashboard-role')
+        .setDescription('Add a role that grants dashboard access')
+        .addRoleOption(opt => opt.setName('role').setDescription('The role to grant dashboard access').setRequired(true))
+    )
+    .addSubcommand(sub =>
+      sub.setName('remove-dashboard-role')
+        .setDescription('Remove a role from dashboard access')
+        .addRoleOption(opt => opt.setName('role').setDescription('The role to remove').setRequired(true))
+    )
+    .addSubcommand(sub =>
+      sub.setName('list-dashboard-roles')
+        .setDescription('List all roles that have dashboard access')
+    )
+    .addSubcommand(sub =>
+      sub.setName('add-ticket-category')
+        .setDescription('Add a category for ticket tracking')
+        .addChannelOption(opt =>
+          opt.setName('category').setDescription('The category channel').addChannelTypes(ChannelType.GuildCategory).setRequired(true)
+        )
+    )
+    .addSubcommand(sub =>
+      sub.setName('remove-ticket-category')
+        .setDescription('Remove a ticket tracking category')
+        .addChannelOption(opt =>
+          opt.setName('category').setDescription('The category to remove').addChannelTypes(ChannelType.GuildCategory).setRequired(true)
+        )
+    )
+    .addSubcommand(sub =>
+      sub.setName('list-ticket-categories')
+        .setDescription('List all ticket tracking categories')
     ),
   new SlashCommandBuilder()
     .setName('lawyer')
@@ -70,10 +97,11 @@ const commands = [
       sub.setName('add')
         .setDescription('Add a lawyer to the roster')
         .addUserOption(opt => opt.setName('user').setDescription('The lawyer to add').setRequired(true))
+        .addStringOption(opt => opt.setName('name').setDescription('Real name of the lawyer').setRequired(false))
     )
     .addSubcommand(sub =>
       sub.setName('remove')
-        .setDescription('Remove a lawyer from the roster')
+        .setDescription('Remove a lawyer from the roster (archives their data)')
         .addUserOption(opt => opt.setName('user').setDescription('The lawyer to remove').setRequired(true))
     )
     .addSubcommand(sub =>
@@ -94,6 +122,25 @@ const commands = [
     .addSubcommand(sub =>
       sub.setName('review')
         .setDescription('View activity overview of all lawyers with status indicators')
+    ),
+  new SlashCommandBuilder()
+    .setName('strike')
+    .setDescription('Strike management for lawyers')
+    .addSubcommand(sub =>
+      sub.setName('add')
+        .setDescription('Add a strike to a lawyer')
+        .addUserOption(opt => opt.setName('user').setDescription('The lawyer to strike').setRequired(true))
+        .addStringOption(opt => opt.setName('reason').setDescription('Reason for the strike').setRequired(true))
+    )
+    .addSubcommand(sub =>
+      sub.setName('remove')
+        .setDescription('Remove a strike by ID')
+        .addIntegerOption(opt => opt.setName('id').setDescription('The strike ID to remove').setRequired(true))
+    )
+    .addSubcommand(sub =>
+      sub.setName('list')
+        .setDescription('View all strikes for a lawyer')
+        .addUserOption(opt => opt.setName('user').setDescription('The lawyer to view strikes for').setRequired(true))
     )
 ].map(cmd => cmd.toJSON());
 

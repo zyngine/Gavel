@@ -8,6 +8,7 @@ function createDashboard(client) {
   const port = process.env.PORT || 3000;
 
   app.use(express.static(path.join(__dirname, 'public')));
+  app.use(express.json());
   app.use(session({
     secret: process.env.SESSION_SECRET || 'gavel-dashboard-secret',
     resave: false,
@@ -35,7 +36,6 @@ function createDashboard(client) {
     if (!code) return res.redirect('/');
 
     try {
-      // Exchange code for token
       const tokenRes = await fetch('https://discord.com/api/oauth2/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -54,7 +54,6 @@ function createDashboard(client) {
         return res.redirect('/?error=auth_failed');
       }
 
-      // Get user info
       const userRes = await fetch('https://discord.com/api/users/@me', {
         headers: { Authorization: `Bearer ${tokenData.access_token}` }
       });
@@ -84,7 +83,6 @@ function createDashboard(client) {
   async function requireAuth(req, res, next) {
     if (!req.session.user) return res.redirect('/auth/login');
 
-    // Check if user has the dashboard role in any guild the bot is in
     try {
       const guildsRes = await fetch('https://discord.com/api/users/@me/guilds', {
         headers: { Authorization: `Bearer ${req.session.user.accessToken}` }
@@ -96,7 +94,6 @@ function createDashboard(client) {
         return res.redirect('/auth/login');
       }
 
-      // Find guilds the bot is also in
       const botGuilds = client.guilds.cache;
       const sharedGuilds = userGuilds.filter(g => botGuilds.has(g.id));
 
@@ -104,12 +101,12 @@ function createDashboard(client) {
       let authorizedGuilds = [];
 
       for (const guild of sharedGuilds) {
-        const config = await db.getGuildConfig(guild.id);
-        if (!config || !config.dashboard_role_id) continue;
+        const dashboardRoleIds = await db.getDashboardRoles(guild.id);
+        if (dashboardRoleIds.length === 0) continue;
 
         const botGuild = botGuilds.get(guild.id);
         const member = await botGuild.members.fetch(req.session.user.id).catch(() => null);
-        if (member && member.roles.cache.has(config.dashboard_role_id)) {
+        if (member && dashboardRoleIds.some(rid => member.roles.cache.has(rid))) {
           authorized = true;
           authorizedGuilds.push({ id: guild.id, name: guild.name });
         }
@@ -117,7 +114,7 @@ function createDashboard(client) {
 
       if (!authorized) {
         return res.status(403).send(`
-          <html><body style="background:#0a0a0a;color:#ff69b4;font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0">
+          <html><body style="background:#000;color:#ff69b4;font-family:sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0">
           <div style="text-align:center"><h1>Access Denied</h1><p>You don't have the required role to view this dashboard.</p><a href="/auth/logout" style="color:#ff69b4">Logout</a></div>
           </body></html>
         `);
@@ -132,7 +129,45 @@ function createDashboard(client) {
     }
   }
 
-  // --- Dashboard pages ---
+  // --- Auth middleware for API (returns JSON instead of redirect) ---
+  async function requireApiAuth(req, res, next) {
+    if (!req.session.user) return res.status(401).json({ error: 'Not authenticated' });
+
+    try {
+      const guildsRes = await fetch('https://discord.com/api/users/@me/guilds', {
+        headers: { Authorization: `Bearer ${req.session.user.accessToken}` }
+      });
+      const userGuilds = await guildsRes.json();
+
+      if (!Array.isArray(userGuilds)) {
+        return res.status(401).json({ error: 'Session expired' });
+      }
+
+      const botGuilds = client.guilds.cache;
+      const sharedGuilds = userGuilds.filter(g => botGuilds.has(g.id));
+
+      let authorizedGuilds = [];
+
+      for (const guild of sharedGuilds) {
+        const dashboardRoleIds = await db.getDashboardRoles(guild.id);
+        if (dashboardRoleIds.length === 0) continue;
+
+        const botGuild = botGuilds.get(guild.id);
+        const member = await botGuild.members.fetch(req.session.user.id).catch(() => null);
+        if (member && dashboardRoleIds.some(rid => member.roles.cache.has(rid))) {
+          authorizedGuilds.push({ id: guild.id, name: guild.name });
+        }
+      }
+
+      req.authorizedGuilds = authorizedGuilds;
+      next();
+    } catch (err) {
+      console.error('API auth error:', err);
+      res.status(401).json({ error: 'Auth failed' });
+    }
+  }
+
+  // --- Pages ---
   app.get('/', (req, res) => {
     if (req.session.user) return res.redirect('/dashboard');
     res.sendFile(path.join(__dirname, 'public', 'login.html'));
@@ -149,11 +184,12 @@ function createDashboard(client) {
     res.json(user);
   });
 
-  app.get('/api/guilds', requireAuth, (req, res) => {
+  app.get('/api/guilds', requireApiAuth, (req, res) => {
     res.json(req.authorizedGuilds);
   });
 
-  app.get('/api/roster/:guildId', requireAuth, async (req, res) => {
+  // --- Roster ---
+  app.get('/api/roster/:guildId', requireApiAuth, async (req, res) => {
     const guildId = req.params.guildId;
     if (!req.authorizedGuilds.find(g => g.id === guildId)) {
       return res.status(403).json({ error: 'Not authorized for this guild' });
@@ -166,6 +202,7 @@ function createDashboard(client) {
       const lastActive = await db.getLastActivity(guildId, l.user_id);
       const activity7 = await db.getActivityCount(guildId, l.user_id, 7);
       const activity30 = await db.getActivityCount(guildId, l.user_id, 30);
+      const strikeCount = await db.getStrikeCount(guildId, l.user_id);
 
       const guild = client.guilds.cache.get(guildId);
       const member = guild ? await guild.members.fetch(l.user_id).catch(() => null) : null;
@@ -175,16 +212,27 @@ function createDashboard(client) {
         daysSince = Math.floor((Date.now() - new Date(lastActive).getTime()) / 86400000);
       }
 
+      const memberRoles = member
+        ? member.roles.cache
+            .filter(r => r.id !== guildId)
+            .sort((a, b) => b.position - a.position)
+            .map(r => ({ id: r.id, name: r.name, color: r.hexColor }))
+        : [];
+
       roster.push({
         userId: l.user_id,
         username: member ? member.user.tag : l.user_id,
-        displayName: member ? member.displayName : 'Unknown',
+        displayName: l.display_name || (member ? member.displayName : 'Unknown'),
+        discordName: member ? member.displayName : 'Unknown',
         avatar: member ? member.user.displayAvatarURL({ size: 64 }) : null,
         addedAt: l.added_at,
+        hireDate: l.hire_date,
         lastActive,
         daysSince,
         activity7,
-        activity30
+        activity30,
+        strikeCount,
+        roles: memberRoles
       });
     }
 
@@ -194,7 +242,46 @@ function createDashboard(client) {
     res.json({ roster, inactivityDays });
   });
 
-  app.get('/api/profile/:guildId/:userId', requireAuth, async (req, res) => {
+  // --- Edit hire date ---
+  app.put('/api/roster/:guildId/:userId/hire-date', requireApiAuth, async (req, res) => {
+    const { guildId, userId } = req.params;
+    if (!req.authorizedGuilds.find(g => g.id === guildId)) {
+      return res.status(403).json({ error: 'Not authorized for this guild' });
+    }
+    const { hireDate } = req.body;
+    if (!hireDate) return res.status(400).json({ error: 'hireDate is required' });
+
+    try {
+      const parsed = new Date(hireDate);
+      if (isNaN(parsed.getTime())) return res.status(400).json({ error: 'Invalid date' });
+      await db.updateHireDate(guildId, userId, parsed);
+      res.json({ success: true });
+    } catch (err) {
+      console.error('Update hire date error:', err);
+      res.status(500).json({ error: 'Failed to update' });
+    }
+  });
+
+  // --- Edit display name ---
+  app.put('/api/roster/:guildId/:userId/display-name', requireApiAuth, async (req, res) => {
+    const { guildId, userId } = req.params;
+    if (!req.authorizedGuilds.find(g => g.id === guildId)) {
+      return res.status(403).json({ error: 'Not authorized for this guild' });
+    }
+    const { displayName } = req.body;
+    if (!displayName || !displayName.trim()) return res.status(400).json({ error: 'displayName is required' });
+
+    try {
+      await db.updateDisplayName(guildId, userId, displayName.trim());
+      res.json({ success: true });
+    } catch (err) {
+      console.error('Update display name error:', err);
+      res.status(500).json({ error: 'Failed to update' });
+    }
+  });
+
+  // --- Profile ---
+  app.get('/api/profile/:guildId/:userId', requireApiAuth, async (req, res) => {
     const { guildId, userId } = req.params;
     if (!req.authorizedGuilds.find(g => g.id === guildId)) {
       return res.status(403).json({ error: 'Not authorized for this guild' });
@@ -210,6 +297,7 @@ function createDashboard(client) {
     const activity30 = await db.getActivityCount(guildId, userId, 30);
     const recent = await db.getRecentActivity(guildId, userId, 15);
     const notes = await db.getNotes(guildId, userId);
+    const strikes = await db.getStrikes(guildId, userId);
 
     const guild = client.guilds.cache.get(guildId);
     const member = guild ? await guild.members.fetch(userId).catch(() => null) : null;
@@ -230,10 +318,143 @@ function createDashboard(client) {
       activity14,
       activity30,
       recent,
-      notes: notes.map(n => ({
-        ...n,
-        authorName: null
-      }))
+      notes,
+      strikes
+    });
+  });
+
+  // --- Strikes ---
+  app.get('/api/strikes/:guildId/:userId', requireApiAuth, async (req, res) => {
+    const { guildId, userId } = req.params;
+    if (!req.authorizedGuilds.find(g => g.id === guildId)) {
+      return res.status(403).json({ error: 'Not authorized for this guild' });
+    }
+    const strikes = await db.getStrikes(guildId, userId);
+    res.json(strikes);
+  });
+
+  // --- Activity log with filtering ---
+  app.get('/api/activity/:guildId/:userId', requireApiAuth, async (req, res) => {
+    const { guildId, userId } = req.params;
+    if (!req.authorizedGuilds.find(g => g.id === guildId)) {
+      return res.status(403).json({ error: 'Not authorized for this guild' });
+    }
+    const { startDate, endDate, channel, limit = 50, offset = 0 } = req.query;
+    const activity = await db.getActivityLog(guildId, userId, {
+      startDate, endDate, channelName: channel,
+      limit: Math.min(parseInt(limit) || 50, 200),
+      offset: parseInt(offset) || 0
+    });
+    res.json(activity);
+  });
+
+  // --- Tickets ---
+  const ticketCache = new Map();
+  const TICKET_CACHE_TTL = 60000;
+
+  app.get('/api/tickets/:guildId/:userId', requireApiAuth, async (req, res) => {
+    const { guildId, userId } = req.params;
+    if (!req.authorizedGuilds.find(g => g.id === guildId)) {
+      return res.status(403).json({ error: 'Not authorized for this guild' });
+    }
+
+    const cacheKey = `${guildId}:${userId}`;
+    const cached = ticketCache.get(cacheKey);
+    if (cached && Date.now() - cached.time < TICKET_CACHE_TTL) {
+      return res.json(cached.data);
+    }
+
+    const categoryIds = await db.getTicketCategories(guildId);
+    const guild = client.guilds.cache.get(guildId);
+    if (!guild || categoryIds.length === 0) return res.json([]);
+
+    const tickets = [];
+    for (const catId of categoryIds) {
+      const category = guild.channels.cache.get(catId);
+      if (!category) continue;
+
+      const channels = guild.channels.cache.filter(
+        ch => ch.parentId === catId && ch.isTextBased()
+      );
+
+      for (const [, channel] of channels) {
+        try {
+          const messages = await channel.messages.fetch({ limit: 100 });
+          const userMessages = messages.filter(m => m.author.id === userId);
+          if (userMessages.size > 0) {
+            const lastMsg = userMessages.first();
+            tickets.push({
+              channelId: channel.id,
+              channelName: channel.name,
+              categoryName: category.name,
+              messageCount: userMessages.size,
+              lastMessageAt: lastMsg.createdAt
+            });
+          }
+        } catch (err) {
+          // Bot may lack permissions; skip
+        }
+      }
+    }
+
+    ticketCache.set(cacheKey, { data: tickets, time: Date.now() });
+    res.json(tickets);
+  });
+
+  // --- Archive ---
+  app.get('/api/archive/:guildId', requireApiAuth, async (req, res) => {
+    const guildId = req.params.guildId;
+    if (!req.authorizedGuilds.find(g => g.id === guildId)) {
+      return res.status(403).json({ error: 'Not authorized for this guild' });
+    }
+
+    const archived = await db.getArchivedLawyers(guildId);
+    const result = [];
+
+    for (const l of archived) {
+      const lastActive = await db.getLastActivity(guildId, l.user_id);
+      const strikeCount = await db.getStrikeCount(guildId, l.user_id);
+      const guild = client.guilds.cache.get(guildId);
+      const member = guild ? await guild.members.fetch(l.user_id).catch(() => null) : null;
+
+      result.push({
+        userId: l.user_id,
+        username: member ? member.user.tag : l.user_id,
+        displayName: l.display_name || (member ? member.displayName : 'Unknown'),
+        avatar: member ? member.user.displayAvatarURL({ size: 64 }) : null,
+        addedAt: l.added_at,
+        hireDate: l.hire_date,
+        archivedAt: l.archived_at,
+        archivedBy: l.archived_by,
+        lastActive,
+        strikeCount
+      });
+    }
+
+    res.json(result);
+  });
+
+  app.get('/api/archive/:guildId/:userId', requireApiAuth, async (req, res) => {
+    const { guildId, userId } = req.params;
+    if (!req.authorizedGuilds.find(g => g.id === guildId)) {
+      return res.status(403).json({ error: 'Not authorized for this guild' });
+    }
+
+    const recent = await db.getRecentActivity(guildId, userId, 50);
+    const notes = await db.getNotes(guildId, userId);
+    const strikes = await db.getStrikes(guildId, userId);
+    const activity7 = await db.getActivityCount(guildId, userId, 7);
+    const activity30 = await db.getActivityCount(guildId, userId, 30);
+    const lastActive = await db.getLastActivity(guildId, userId);
+
+    const guild = client.guilds.cache.get(guildId);
+    const member = guild ? await guild.members.fetch(userId).catch(() => null) : null;
+
+    res.json({
+      username: member ? member.user.tag : userId,
+      displayName: member ? member.displayName : 'Unknown',
+      avatar: member ? member.user.displayAvatarURL({ size: 128 }) : null,
+      recent, notes, strikes, activity7, activity30, lastActive
     });
   });
 

@@ -81,7 +81,7 @@ async function syncRosterRoles(guild) {
       if (hasRosterRole && !isOnRoster) {
         await db.addLawyer(guild.id, member.id, 'auto-sync');
       } else if (!hasRosterRole && isOnRoster) {
-        await db.removeLawyer(guild.id, member.id);
+        await db.archiveLawyer(guild.id, member.id, 'auto-sync');
       }
     }
   } catch (err) {
@@ -101,7 +101,7 @@ client.on('guildMemberUpdate', async (oldMember, newMember) => {
   if (!hadRole && hasRole) {
     await db.addLawyer(newMember.guild.id, newMember.id, 'auto-sync');
   } else if (hadRole && !hasRole) {
-    await db.removeLawyer(newMember.guild.id, newMember.id);
+    await db.archiveLawyer(newMember.guild.id, newMember.id, 'auto-sync');
   }
 });
 
@@ -151,12 +151,6 @@ client.on('interactionCreate', async (interaction) => {
       return interaction.reply({ content: `Lawyers will be flagged after **${days} days** of inactivity.`, ephemeral: true });
     }
 
-    if (sub === 'dashboard-role') {
-      const role = interaction.options.getRole('role');
-      await db.setDashboardRole(guildId, role.id);
-      return interaction.reply({ content: `Dashboard access granted to members with the **${role.name}** role.`, ephemeral: true });
-    }
-
     if (sub === 'add-channel') {
       const channel = interaction.options.getChannel('channel');
       await db.addMonitoredChannel(guildId, channel.id, 'channel');
@@ -174,6 +168,20 @@ client.on('interactionCreate', async (interaction) => {
       const removed = await db.removeMonitoredChannel(guildId, channel.id);
       if (!removed) return interaction.reply({ content: 'That channel/category is not being monitored.', ephemeral: true });
       return interaction.reply({ content: `Stopped monitoring ${channel}.`, ephemeral: true });
+    }
+
+    if (sub === 'list-channels') {
+      const channels = await db.getMonitoredChannels(guildId);
+      if (channels.length === 0) return interaction.reply({ content: 'No channels are being monitored.', ephemeral: true });
+      const list = channels.map(c => {
+        const label = c.channel_type === 'category' ? '(category)' : '(channel)';
+        return `<#${c.channel_id}> ${label}`;
+      }).join('\n');
+      const embed = new EmbedBuilder()
+        .setTitle('Monitored Channels')
+        .setColor(0x3498DB)
+        .setDescription(list);
+      return interaction.reply({ embeds: [embed], ephemeral: true });
     }
 
     if (sub === 'roster-role') {
@@ -203,20 +211,52 @@ client.on('interactionCreate', async (interaction) => {
       return interaction.reply({ embeds: [embed], ephemeral: true });
     }
 
-    if (sub === 'list-channels') {
-      const channels = await db.getMonitoredChannels(guildId);
-      if (channels.length === 0) return interaction.reply({ content: 'No channels are being monitored.', ephemeral: true });
+    if (sub === 'add-dashboard-role') {
+      const role = interaction.options.getRole('role');
+      await db.addDashboardRole(guildId, role.id);
+      return interaction.reply({ content: `**${role.name}** can now access the dashboard.`, ephemeral: true });
+    }
 
-      const list = channels.map(c => {
-        const label = c.channel_type === 'category' ? '(category)' : '(channel)';
-        return `<#${c.channel_id}> ${label}`;
-      }).join('\n');
+    if (sub === 'remove-dashboard-role') {
+      const role = interaction.options.getRole('role');
+      const removed = await db.removeDashboardRole(guildId, role.id);
+      if (!removed) return interaction.reply({ content: 'That role does not have dashboard access.', ephemeral: true });
+      return interaction.reply({ content: `**${role.name}** no longer has dashboard access.`, ephemeral: true });
+    }
 
+    if (sub === 'list-dashboard-roles') {
+      const roleIds = await db.getDashboardRoles(guildId);
+      if (roleIds.length === 0) return interaction.reply({ content: 'No dashboard roles configured.', ephemeral: true });
+      const list = roleIds.map(id => `<@&${id}>`).join('\n');
       const embed = new EmbedBuilder()
-        .setTitle('Monitored Channels')
+        .setTitle('Dashboard Roles')
+        .setColor(0x3498DB)
+        .setDescription(list)
+        .setFooter({ text: 'Members with these roles can access the web dashboard' });
+      return interaction.reply({ embeds: [embed], ephemeral: true });
+    }
+
+    if (sub === 'add-ticket-category') {
+      const channel = interaction.options.getChannel('category');
+      await db.addTicketCategory(guildId, channel.id);
+      return interaction.reply({ content: `Now tracking tickets under **${channel.name}**.`, ephemeral: true });
+    }
+
+    if (sub === 'remove-ticket-category') {
+      const channel = interaction.options.getChannel('category');
+      const removed = await db.removeTicketCategory(guildId, channel.id);
+      if (!removed) return interaction.reply({ content: 'That category is not being tracked for tickets.', ephemeral: true });
+      return interaction.reply({ content: `Stopped tracking tickets under **${channel.name}**.`, ephemeral: true });
+    }
+
+    if (sub === 'list-ticket-categories') {
+      const categories = await db.getTicketCategories(guildId);
+      if (categories.length === 0) return interaction.reply({ content: 'No ticket categories configured.', ephemeral: true });
+      const list = categories.map(id => `<#${id}>`).join('\n');
+      const embed = new EmbedBuilder()
+        .setTitle('Ticket Categories')
         .setColor(0x3498DB)
         .setDescription(list);
-
       return interaction.reply({ embeds: [embed], ephemeral: true });
     }
   }
@@ -232,8 +272,10 @@ client.on('interactionCreate', async (interaction) => {
       }
 
       const user = interaction.options.getUser('user');
-      await db.addLawyer(guildId, user.id, interaction.user.id);
-      return interaction.reply({ content: `**${user.tag}** has been added to the lawyer roster.`, ephemeral: true });
+      const name = interaction.options.getString('name');
+      await db.addLawyer(guildId, user.id, interaction.user.id, name);
+      const nameText = name ? ` (${name})` : '';
+      return interaction.reply({ content: `**${user.tag}**${nameText} has been added to the lawyer roster.`, ephemeral: true });
     }
 
     // --- /lawyer remove ---
@@ -243,9 +285,9 @@ client.on('interactionCreate', async (interaction) => {
       }
 
       const user = interaction.options.getUser('user');
-      const removed = await db.removeLawyer(guildId, user.id);
+      const removed = await db.archiveLawyer(guildId, user.id, interaction.user.id);
       if (!removed) return interaction.reply({ content: `**${user.tag}** is not on the roster.`, ephemeral: true });
-      return interaction.reply({ content: `**${user.tag}** has been removed from the lawyer roster.`, ephemeral: true });
+      return interaction.reply({ content: `**${user.tag}** has been removed from the roster and archived.`, ephemeral: true });
     }
 
     // --- /lawyer list ---
@@ -264,7 +306,8 @@ client.on('interactionCreate', async (interaction) => {
           const daysAgo = Math.floor((Date.now() - new Date(lastActive).getTime()) / 86400000);
           status = daysAgo === 0 ? 'Active today' : `${daysAgo} day${daysAgo === 1 ? '' : 's'} ago`;
         }
-        lines.push(`<@${l.user_id}> — Last active: **${status}**`);
+        const name = l.display_name ? `${l.display_name} (<@${l.user_id}>)` : `<@${l.user_id}>`;
+        lines.push(`${name} — Last active: **${status}**`);
       }
 
       const embed = new EmbedBuilder()
@@ -291,6 +334,7 @@ client.on('interactionCreate', async (interaction) => {
       const activity30 = await db.getActivityCount(guildId, user.id, 30);
       const recent = await db.getRecentActivity(guildId, user.id, 5);
       const notes = await db.getNotes(guildId, user.id);
+      const strikes = await db.getStrikes(guildId, user.id);
 
       let lastActiveText;
       let daysSince;
@@ -311,7 +355,7 @@ client.on('interactionCreate', async (interaction) => {
         .addFields(
           { name: 'Last Active', value: lastActiveText, inline: true },
           { name: 'Days Since Activity', value: daysSince, inline: true },
-          { name: '\u200b', value: '\u200b', inline: true },
+          { name: 'Strikes', value: `${strikes.length}`, inline: true },
           { name: 'Messages (7d)', value: `${activity7}`, inline: true },
           { name: 'Messages (14d)', value: `${activity14}`, inline: true },
           { name: 'Messages (30d)', value: `${activity30}`, inline: true }
@@ -323,6 +367,14 @@ client.on('interactionCreate', async (interaction) => {
           return `#${r.channel_name} — <t:${timeUnix}:R>`;
         }).join('\n');
         embed.addFields({ name: 'Recent Activity', value: recentText });
+      }
+
+      if (strikes.length > 0) {
+        const strikesText = strikes.slice(0, 5).map(s => {
+          const timeUnix = Math.floor(new Date(s.created_at).getTime() / 1000);
+          return `#${s.id} — <t:${timeUnix}:d> by <@${s.issued_by}>: ${s.reason}`;
+        }).join('\n');
+        embed.addFields({ name: 'Strikes', value: strikesText.length > 1024 ? strikesText.slice(0, 1020) + '...' : strikesText });
       }
 
       if (notes.length > 0) {
@@ -366,6 +418,7 @@ client.on('interactionCreate', async (interaction) => {
       for (const l of lawyers) {
         const lastActive = await db.getLastActivity(guildId, l.user_id);
         const activity30 = await db.getActivityCount(guildId, l.user_id, 30);
+        const strikeCount = await db.getStrikeCount(guildId, l.user_id);
 
         let statusIcon;
         if (!lastActive) {
@@ -383,7 +436,8 @@ client.on('interactionCreate', async (interaction) => {
           daysText = daysAgo === 0 ? 'Today' : `${daysAgo}d ago`;
         }
 
-        lines.push(`${statusIcon} <@${l.user_id}> — Last: **${daysText}** | 30d msgs: **${activity30}**`);
+        const strikeText = strikeCount > 0 ? ` | ⚠️ ${strikeCount}` : '';
+        lines.push(`${statusIcon} <@${l.user_id}> — Last: **${daysText}** | 30d msgs: **${activity30}**${strikeText}`);
       }
 
       const embed = new EmbedBuilder()
@@ -394,6 +448,52 @@ client.on('interactionCreate', async (interaction) => {
         .setTimestamp();
 
       return interaction.editReply({ embeds: [embed] });
+    }
+  }
+
+  // ==================== /strike ====================
+  if (commandName === 'strike') {
+    if (!interaction.member.permissions.has(PermissionFlagsBits.ManageGuild)) {
+      return interaction.reply({ content: 'You need **Manage Server** permission.', ephemeral: true });
+    }
+
+    const sub = interaction.options.getSubcommand();
+
+    if (sub === 'add') {
+      const user = interaction.options.getUser('user');
+      const reason = interaction.options.getString('reason');
+
+      if (!(await db.isLawyer(guildId, user.id))) {
+        return interaction.reply({ content: `**${user.tag}** is not on the roster.`, ephemeral: true });
+      }
+
+      const strike = await db.addStrike(guildId, user.id, interaction.user.id, reason);
+      return interaction.reply({ content: `Strike **#${strike.id}** added to **${user.tag}**: ${reason}`, ephemeral: true });
+    }
+
+    if (sub === 'remove') {
+      const id = interaction.options.getInteger('id');
+      const removed = await db.removeStrike(id, guildId);
+      if (!removed) return interaction.reply({ content: `Strike #${id} not found.`, ephemeral: true });
+      return interaction.reply({ content: `Strike **#${id}** has been removed.`, ephemeral: true });
+    }
+
+    if (sub === 'list') {
+      const user = interaction.options.getUser('user');
+      const strikes = await db.getStrikes(guildId, user.id);
+      if (strikes.length === 0) {
+        return interaction.reply({ content: `**${user.tag}** has no strikes.`, ephemeral: true });
+      }
+      const list = strikes.map(s => {
+        const timeUnix = Math.floor(new Date(s.created_at).getTime() / 1000);
+        return `**#${s.id}** — <t:${timeUnix}:d> by <@${s.issued_by}>: ${s.reason}`;
+      }).join('\n');
+      const embed = new EmbedBuilder()
+        .setTitle(`Strikes for ${user.tag}`)
+        .setColor(0xE74C3C)
+        .setDescription(list)
+        .setFooter({ text: `${strikes.length} total strike${strikes.length !== 1 ? 's' : ''}` });
+      return interaction.reply({ embeds: [embed], ephemeral: true });
     }
   }
 
