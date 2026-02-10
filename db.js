@@ -384,12 +384,13 @@ async function setInactivityDays(guildId, days) {
 
 async function getInactiveLawyers(guildId, days) {
   const res = await pool.query(
-    `SELECT l.user_id, l.added_at,
-       (SELECT MAX(a.logged_at) FROM activity_log a WHERE a.guild_id = l.guild_id AND a.user_id = l.user_id) as last_active
-     FROM lawyers l
-     WHERE l.guild_id = $1 AND l.archived = FALSE
-     HAVING (SELECT MAX(a.logged_at) FROM activity_log a WHERE a.guild_id = l.guild_id AND a.user_id = l.user_id) IS NULL
-        OR (SELECT MAX(a.logged_at) FROM activity_log a WHERE a.guild_id = l.guild_id AND a.user_id = l.user_id) < NOW() - INTERVAL '1 day' * $2
+    `SELECT user_id, added_at, last_active FROM (
+       SELECT l.user_id, l.added_at,
+         (SELECT MAX(a.logged_at) FROM activity_log a WHERE a.guild_id = l.guild_id AND a.user_id = l.user_id) as last_active
+       FROM lawyers l
+       WHERE l.guild_id = $1 AND l.archived = FALSE
+     ) sub
+     WHERE last_active IS NULL OR last_active < NOW() - INTERVAL '1 day' * $2
      ORDER BY last_active ASC NULLS FIRST`,
     [guildId, days]
   );
