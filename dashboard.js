@@ -134,6 +134,13 @@ function createDashboard(client) {
     if (!req.session.user) return res.status(401).json({ error: 'Not authenticated' });
 
     try {
+      // Cache authorized guilds in session for 60 seconds to avoid Discord API rate limits
+      const now = Date.now();
+      if (req.session.authorizedGuilds && req.session.authCacheTime && (now - req.session.authCacheTime) < 60000) {
+        req.authorizedGuilds = req.session.authorizedGuilds;
+        return next();
+      }
+
       const guildsRes = await fetch('https://discord.com/api/users/@me/guilds', {
         headers: { Authorization: `Bearer ${req.session.user.accessToken}` }
       });
@@ -159,6 +166,8 @@ function createDashboard(client) {
         }
       }
 
+      req.session.authorizedGuilds = authorizedGuilds;
+      req.session.authCacheTime = now;
       req.authorizedGuilds = authorizedGuilds;
       next();
     } catch (err) {
@@ -190,56 +199,80 @@ function createDashboard(client) {
 
   // --- Roster ---
   app.get('/api/roster/:guildId', requireApiAuth, async (req, res) => {
-    const guildId = req.params.guildId;
-    if (!req.authorizedGuilds.find(g => g.id === guildId)) {
-      return res.status(403).json({ error: 'Not authorized for this guild' });
-    }
-
-    const lawyers = await db.getLawyers(guildId);
-    const roster = [];
-
-    for (const l of lawyers) {
-      const lastActive = await db.getLastActivity(guildId, l.user_id);
-      const activity7 = await db.getActivityCount(guildId, l.user_id, 7);
-      const activity30 = await db.getActivityCount(guildId, l.user_id, 30);
-      const strikeCount = await db.getStrikeCount(guildId, l.user_id);
-
-      const guild = client.guilds.cache.get(guildId);
-      const member = guild ? await guild.members.fetch(l.user_id).catch(() => null) : null;
-
-      let daysSince = null;
-      if (lastActive) {
-        daysSince = Math.floor((Date.now() - new Date(lastActive).getTime()) / 86400000);
+    try {
+      const guildId = req.params.guildId;
+      if (!req.authorizedGuilds.find(g => g.id === guildId)) {
+        return res.status(403).json({ error: 'Not authorized for this guild' });
       }
 
-      const memberRoles = member
-        ? member.roles.cache
-            .filter(r => r.id !== guildId)
-            .sort((a, b) => b.position - a.position)
-            .map(r => ({ id: r.id, name: r.name, color: r.hexColor }))
-        : [];
+      const lawyers = await db.getLawyers(guildId);
+      const roster = [];
+      const guild = client.guilds.cache.get(guildId);
 
-      roster.push({
-        userId: l.user_id,
-        username: member ? member.user.tag : l.user_id,
-        displayName: l.display_name || (member ? member.displayName : 'Unknown'),
-        discordName: member ? member.displayName : 'Unknown',
-        avatar: member ? member.user.displayAvatarURL({ size: 64 }) : null,
-        addedAt: l.added_at,
-        hireDate: l.hire_date,
-        lastActive,
-        daysSince,
-        activity7,
-        activity30,
-        strikeCount,
-        roles: memberRoles
-      });
+      for (const l of lawyers) {
+        try {
+          const lastActive = await db.getLastActivity(guildId, l.user_id);
+          const activity7 = await db.getActivityCount(guildId, l.user_id, 7);
+          const activity30 = await db.getActivityCount(guildId, l.user_id, 30);
+          const strikeCount = await db.getStrikeCount(guildId, l.user_id);
+
+          const member = guild ? await guild.members.fetch(l.user_id).catch(() => null) : null;
+
+          let daysSince = null;
+          if (lastActive) {
+            daysSince = Math.floor((Date.now() - new Date(lastActive).getTime()) / 86400000);
+          }
+
+          const memberRoles = member
+            ? member.roles.cache
+                .filter(r => r.id !== guildId)
+                .sort((a, b) => b.position - a.position)
+                .map(r => ({ id: r.id, name: r.name, color: r.hexColor }))
+            : [];
+
+          roster.push({
+            userId: l.user_id,
+            username: member ? member.user.tag : l.user_id,
+            displayName: l.display_name || (member ? member.displayName : 'Unknown'),
+            discordName: member ? member.displayName : 'Unknown',
+            avatar: member ? member.user.displayAvatarURL({ size: 64 }) : null,
+            addedAt: l.added_at,
+            hireDate: l.hire_date,
+            lastActive,
+            daysSince,
+            activity7,
+            activity30,
+            strikeCount,
+            roles: memberRoles
+          });
+        } catch (memberErr) {
+          console.error(`Error loading lawyer ${l.user_id}:`, memberErr.message);
+          roster.push({
+            userId: l.user_id,
+            username: l.user_id,
+            displayName: l.display_name || 'Unknown',
+            discordName: 'Unknown',
+            avatar: null,
+            addedAt: l.added_at,
+            hireDate: l.hire_date,
+            lastActive: null,
+            daysSince: null,
+            activity7: 0,
+            activity30: 0,
+            strikeCount: 0,
+            roles: []
+          });
+        }
+      }
+
+      const config = await db.getGuildConfig(guildId);
+      const inactivityDays = config?.inactivity_days || 7;
+
+      res.json({ roster, inactivityDays });
+    } catch (err) {
+      console.error('Roster endpoint error:', err);
+      res.status(500).json({ error: 'Failed to load roster' });
     }
-
-    const config = await db.getGuildConfig(guildId);
-    const inactivityDays = config?.inactivity_days || 7;
-
-    res.json({ roster, inactivityDays });
   });
 
   // --- Edit hire date ---
@@ -282,45 +315,50 @@ function createDashboard(client) {
 
   // --- Profile ---
   app.get('/api/profile/:guildId/:userId', requireApiAuth, async (req, res) => {
-    const { guildId, userId } = req.params;
-    if (!req.authorizedGuilds.find(g => g.id === guildId)) {
-      return res.status(403).json({ error: 'Not authorized for this guild' });
+    try {
+      const { guildId, userId } = req.params;
+      if (!req.authorizedGuilds.find(g => g.id === guildId)) {
+        return res.status(403).json({ error: 'Not authorized for this guild' });
+      }
+
+      if (!(await db.isLawyer(guildId, userId))) {
+        return res.status(404).json({ error: 'Lawyer not found' });
+      }
+
+      const lastActive = await db.getLastActivity(guildId, userId);
+      const activity7 = await db.getActivityCount(guildId, userId, 7);
+      const activity14 = await db.getActivityCount(guildId, userId, 14);
+      const activity30 = await db.getActivityCount(guildId, userId, 30);
+      const recent = await db.getRecentActivity(guildId, userId, 15);
+      const notes = await db.getNotes(guildId, userId);
+      const strikes = await db.getStrikes(guildId, userId);
+
+      const guild = client.guilds.cache.get(guildId);
+      const member = guild ? await guild.members.fetch(userId).catch(() => null) : null;
+
+      let daysSince = null;
+      if (lastActive) {
+        daysSince = Math.floor((Date.now() - new Date(lastActive).getTime()) / 86400000);
+      }
+
+      res.json({
+        userId,
+        username: member ? member.user.tag : userId,
+        displayName: member ? member.displayName : 'Unknown',
+        avatar: member ? member.user.displayAvatarURL({ size: 128 }) : null,
+        lastActive,
+        daysSince,
+        activity7,
+        activity14,
+        activity30,
+        recent,
+        notes,
+        strikes
+      });
+    } catch (err) {
+      console.error('Profile endpoint error:', err);
+      res.status(500).json({ error: 'Failed to load profile' });
     }
-
-    if (!(await db.isLawyer(guildId, userId))) {
-      return res.status(404).json({ error: 'Lawyer not found' });
-    }
-
-    const lastActive = await db.getLastActivity(guildId, userId);
-    const activity7 = await db.getActivityCount(guildId, userId, 7);
-    const activity14 = await db.getActivityCount(guildId, userId, 14);
-    const activity30 = await db.getActivityCount(guildId, userId, 30);
-    const recent = await db.getRecentActivity(guildId, userId, 15);
-    const notes = await db.getNotes(guildId, userId);
-    const strikes = await db.getStrikes(guildId, userId);
-
-    const guild = client.guilds.cache.get(guildId);
-    const member = guild ? await guild.members.fetch(userId).catch(() => null) : null;
-
-    let daysSince = null;
-    if (lastActive) {
-      daysSince = Math.floor((Date.now() - new Date(lastActive).getTime()) / 86400000);
-    }
-
-    res.json({
-      userId,
-      username: member ? member.user.tag : userId,
-      displayName: member ? member.displayName : 'Unknown',
-      avatar: member ? member.user.displayAvatarURL({ size: 128 }) : null,
-      lastActive,
-      daysSince,
-      activity7,
-      activity14,
-      activity30,
-      recent,
-      notes,
-      strikes
-    });
   });
 
   // --- Strikes ---
