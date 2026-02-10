@@ -127,6 +127,7 @@ client.once('ready', async () => {
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.guild || !interaction.isChatInputCommand()) return;
 
+  try {
   const guildId = interaction.guild.id;
   const { commandName } = interaction;
 
@@ -177,10 +178,10 @@ client.on('interactionCreate', async (interaction) => {
 
     if (sub === 'roster-role') {
       const role = interaction.options.getRole('role');
+      await interaction.deferReply({ ephemeral: true });
       await db.addRosterRole(guildId, role.id);
-      // Sync immediately
       await syncRosterRoles(interaction.guild);
-      return interaction.reply({ content: `Members with **${role.name}** will now auto-populate the lawyer roster.`, ephemeral: true });
+      return interaction.editReply({ content: `Members with **${role.name}** will now auto-populate the lawyer roster.` });
     }
 
     if (sub === 'remove-roster-role') {
@@ -249,8 +250,9 @@ client.on('interactionCreate', async (interaction) => {
 
     // --- /lawyer list ---
     if (sub === 'list') {
+      await interaction.deferReply({ ephemeral: true });
       const lawyers = await db.getLawyers(guildId);
-      if (lawyers.length === 0) return interaction.reply({ content: 'No lawyers on the roster.', ephemeral: true });
+      if (lawyers.length === 0) return interaction.editReply({ content: 'No lawyers on the roster.' });
 
       const lines = [];
       for (const l of lawyers) {
@@ -271,15 +273,16 @@ client.on('interactionCreate', async (interaction) => {
         .setDescription(lines.join('\n'))
         .setFooter({ text: `${lawyers.length} lawyer${lawyers.length === 1 ? '' : 's'} on roster` });
 
-      return interaction.reply({ embeds: [embed], ephemeral: true });
+      return interaction.editReply({ embeds: [embed] });
     }
 
     // --- /lawyer profile ---
     if (sub === 'profile') {
       const user = interaction.options.getUser('user');
+      await interaction.deferReply({ ephemeral: true });
 
       if (!(await db.isLawyer(guildId, user.id))) {
-        return interaction.reply({ content: `**${user.tag}** is not on the roster.`, ephemeral: true });
+        return interaction.editReply({ content: `**${user.tag}** is not on the roster.` });
       }
 
       const lastActive = await db.getLastActivity(guildId, user.id);
@@ -330,7 +333,7 @@ client.on('interactionCreate', async (interaction) => {
         embed.addFields({ name: 'Notes', value: notesText.length > 1024 ? notesText.slice(0, 1020) + '...' : notesText });
       }
 
-      return interaction.reply({ embeds: [embed], ephemeral: true });
+      return interaction.editReply({ embeds: [embed] });
     }
 
     // --- /lawyer note ---
@@ -352,8 +355,9 @@ client.on('interactionCreate', async (interaction) => {
 
     // --- /lawyer review ---
     if (sub === 'review') {
+      await interaction.deferReply({ ephemeral: true });
       const lawyers = await db.getLawyers(guildId);
-      if (lawyers.length === 0) return interaction.reply({ content: 'No lawyers on the roster.', ephemeral: true });
+      if (lawyers.length === 0) return interaction.editReply({ content: 'No lawyers on the roster.' });
 
       const config = await db.getGuildConfig(guildId);
       const threshold = config?.inactivity_days || 7;
@@ -389,8 +393,19 @@ client.on('interactionCreate', async (interaction) => {
         .setFooter({ text: `🟢 Active | 🟡 Warning | 🔴 Inactive (${threshold}+ days)` })
         .setTimestamp();
 
-      return interaction.reply({ embeds: [embed], ephemeral: true });
+      return interaction.editReply({ embeds: [embed] });
     }
+  }
+
+  } catch (err) {
+    console.error('Interaction error:', err);
+    try {
+      if (interaction.deferred) {
+        await interaction.editReply({ content: 'Something went wrong. Please try again.' });
+      } else if (!interaction.replied) {
+        await interaction.reply({ content: 'Something went wrong. Please try again.', ephemeral: true });
+      }
+    } catch (_) {}
   }
 });
 
