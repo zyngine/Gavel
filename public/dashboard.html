@@ -570,37 +570,59 @@
     let inactivityDays = 7;
 
     async function init() {
-      const me = await fetch('/api/me').then(r => r.json());
-      document.getElementById('user-name').textContent = me.username;
-      if (me.avatar) {
-        document.getElementById('user-avatar').src = `https://cdn.discordapp.com/avatars/${me.id}/${me.avatar}.png?size=64`;
-      }
+      try {
+        const meRes = await fetch('/api/me');
+        if (meRes.redirected || !meRes.ok) return window.location.href = '/auth/login';
+        const me = await meRes.json();
+        document.getElementById('user-name').textContent = me.username;
+        if (me.avatar) {
+          document.getElementById('user-avatar').src = `https://cdn.discordapp.com/avatars/${me.id}/${me.avatar}.png?size=64`;
+        }
 
-      const guilds = await fetch('/api/guilds').then(r => r.json());
-      const select = document.getElementById('guild-select');
+        const guildsRes = await fetch('/api/guilds');
+        if (guildsRes.redirected || !guildsRes.ok) return window.location.href = '/auth/login';
+        const guilds = await guildsRes.json();
 
-      guilds.forEach(g => {
-        const opt = document.createElement('option');
-        opt.value = g.id;
-        opt.textContent = g.name;
-        select.appendChild(opt);
-      });
+        if (!Array.isArray(guilds) || guilds.length === 0) {
+          document.getElementById('stats-bar').innerHTML = '';
+          document.getElementById('roster-body').innerHTML = '<div class="empty-state"><p>No authorized servers found. Make sure a dashboard role is configured and you have it.</p></div>';
+          return;
+        }
 
-      if (guilds.length > 0) {
+        const select = document.getElementById('guild-select');
+        guilds.forEach(g => {
+          const opt = document.createElement('option');
+          opt.value = g.id;
+          opt.textContent = g.name;
+          select.appendChild(opt);
+        });
+
         currentGuild = guilds[0].id;
         loadRoster();
-      }
 
-      select.addEventListener('change', () => {
-        currentGuild = select.value;
-        loadRoster();
-      });
+        select.addEventListener('change', () => {
+          currentGuild = select.value;
+          loadRoster();
+        });
+      } catch (err) {
+        console.error('Init error:', err);
+        document.getElementById('roster-body').innerHTML = '<div class="empty-state"><p>Failed to load dashboard. Please try logging in again.</p></div>';
+      }
     }
 
     async function loadRoster() {
       if (!currentGuild) return;
 
-      const data = await fetch(`/api/roster/${currentGuild}`).then(r => r.json());
+      let data;
+      try {
+        const res = await fetch(`/api/roster/${currentGuild}`);
+        if (!res.ok) throw new Error('Failed to load roster');
+        data = await res.json();
+      } catch (err) {
+        console.error('Roster error:', err);
+        document.getElementById('roster-body').innerHTML = '<div class="empty-state"><p>Failed to load roster data.</p></div>';
+        return;
+      }
       inactivityDays = data.inactivityDays;
       const roster = data.roster;
 
