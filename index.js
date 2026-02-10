@@ -1,6 +1,10 @@
 const { Client, GatewayIntentBits, EmbedBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
+const http = require('http');
 const db = require('./db');
 require('dotenv').config();
+
+const port = process.env.PORT || 3000;
+http.createServer((req, res) => { res.writeHead(200); res.end('Gavel is running'); }).listen(port);
 
 const client = new Client({
   intents: [
