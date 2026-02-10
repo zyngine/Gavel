@@ -48,6 +48,20 @@ const commands = [
       sub.setName('dashboard-role')
         .setDescription('Set which role can access the web dashboard')
         .addRoleOption(opt => opt.setName('role').setDescription('The role that grants dashboard access').setRequired(true))
+    )
+    .addSubcommand(sub =>
+      sub.setName('roster-role')
+        .setDescription('Add a role that auto-populates the lawyer roster')
+        .addRoleOption(opt => opt.setName('role').setDescription('The role to sync to the roster').setRequired(true))
+    )
+    .addSubcommand(sub =>
+      sub.setName('remove-roster-role')
+        .setDescription('Remove a role from auto-populating the roster')
+        .addRoleOption(opt => opt.setName('role').setDescription('The role to remove').setRequired(true))
+    )
+    .addSubcommand(sub =>
+      sub.setName('list-roster-roles')
+        .setDescription('List all roles that auto-populate the roster')
     ),
   new SlashCommandBuilder()
     .setName('lawyer')

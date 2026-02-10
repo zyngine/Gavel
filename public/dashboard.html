@@ -4,210 +4,512 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gavel - Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+
     body {
-      background: #0a0a0a;
-      color: #e0e0e0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #000;
+      color: #f0f0f0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Ambient background blobs */
+    body::before, body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.15;
+      z-index: 0;
+      pointer-events: none;
+    }
+    body::before {
+      width: 600px; height: 600px;
+      background: #ff69b4;
+      top: -200px; right: -100px;
+    }
+    body::after {
+      width: 500px; height: 500px;
+      background: #ff69b4;
+      bottom: -150px; left: -100px;
+    }
+
+    /* Glass utility */
+    .glass {
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
     }
 
     /* Header */
     .header {
-      background: #111;
-      border-bottom: 2px solid #ff69b4;
-      padding: 1rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+      border-bottom: 1px solid rgba(255, 105, 180, 0.2);
+      padding: 16px 28px;
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    .header h1 { color: #ff69b4; font-size: 1.5rem; }
-    .header-right { display: flex; align-items: center; gap: 1rem; }
-    .header-right select {
-      background: #1a1a1a;
-      color: #e0e0e0;
-      border: 1px solid #333;
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-size: 0.9rem;
-    }
-    .user-info {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      color: #aaa;
-    }
-    .user-info img { width: 28px; height: 28px; border-radius: 50%; }
-    .logout-btn {
-      color: #ff69b4;
-      text-decoration: none;
-      font-size: 0.85rem;
-    }
-
-    /* Main content */
-    .container { max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem; }
-
-    /* Stats bar */
-    .stats-bar {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-    .stat-card {
-      background: #111;
-      border: 1px solid #222;
-      border-radius: 10px;
-      padding: 1.2rem;
-      text-align: center;
-    }
-    .stat-card .stat-value {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #ff69b4;
-    }
-    .stat-card .stat-label {
-      color: #888;
-      font-size: 0.85rem;
-      margin-top: 0.3rem;
-    }
-
-    /* Roster table */
-    .roster-section h2 {
-      color: #ff69b4;
-      margin-bottom: 1rem;
-      font-size: 1.3rem;
-    }
-    .roster-table {
-      width: 100%;
-      border-collapse: collapse;
-      background: #111;
-      border-radius: 10px;
-      overflow: hidden;
-    }
-    .roster-table th {
-      background: #1a1a1a;
-      color: #ff69b4;
-      padding: 12px 16px;
-      text-align: left;
-      font-weight: 600;
-      font-size: 0.85rem;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .roster-table td {
-      padding: 12px 16px;
-      border-top: 1px solid #1a1a1a;
-    }
-    .roster-table tr:hover td { background: #1a1a1a; }
-    .roster-table tr { cursor: pointer; }
-
-    .lawyer-cell {
+    .header-brand {
       display: flex;
       align-items: center;
       gap: 10px;
     }
-    .lawyer-cell img {
+    .header-brand h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #ff69b4, #ff9ed8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.5px;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .header-right select {
+      background: rgba(255, 255, 255, 0.06);
+      color: #e0e0e0;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      outline: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .header-right select:hover {
+      border-color: rgba(255, 105, 180, 0.4);
+    }
+    .header-right select option {
+      background: #1a1a1a;
+      color: #e0e0e0;
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .user-info img {
       width: 32px;
       height: 32px;
       border-radius: 50%;
+      border: 2px solid rgba(255, 105, 180, 0.4);
     }
-    .lawyer-cell .name { font-weight: 500; }
-
-    .status-badge {
-      padding: 4px 10px;
-      border-radius: 12px;
+    .user-info span {
+      color: #bbb;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+    .logout-btn {
+      color: rgba(255, 105, 180, 0.8);
+      text-decoration: none;
       font-size: 0.8rem;
+      font-weight: 500;
+      padding: 6px 14px;
+      border: 1px solid rgba(255, 105, 180, 0.2);
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+    .logout-btn:hover {
+      background: rgba(255, 105, 180, 0.1);
+      border-color: rgba(255, 105, 180, 0.4);
+    }
+
+    /* Container */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 28px 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Stats grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    @media (max-width: 768px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    .stat-card {
+      padding: 24px;
+      text-align: center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent, #ff69b4), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .stat-card:hover::before { opacity: 1; }
+    .stat-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255, 105, 180, 0.2);
+      box-shadow: 0 8px 32px rgba(255, 105, 180, 0.08);
+    }
+    .stat-value {
+      font-size: 2.4rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+    .stat-label {
+      color: #666;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 8px;
+    }
+    .stat-total .stat-value { color: #ff69b4; }
+    .stat-active .stat-value { color: #34d399; }
+    .stat-warning .stat-value { color: #fbbf24; }
+    .stat-inactive .stat-value { color: #f87171; }
+
+    /* Roster section */
+    .roster-section {
+      margin-bottom: 28px;
+    }
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .section-header h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.3px;
+    }
+    .section-header .badge {
+      background: rgba(255, 105, 180, 0.15);
+      color: #ff69b4;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
       font-weight: 600;
     }
-    .status-green { background: rgba(46, 204, 113, 0.15); color: #2ecc71; }
-    .status-yellow { background: rgba(241, 196, 15, 0.15); color: #f1c40f; }
-    .status-red { background: rgba(231, 76, 60, 0.15); color: #e74c3c; }
 
-    /* Profile modal */
+    /* Roster cards (mobile-friendly grid instead of table) */
+    .roster-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .roster-item {
+      display: grid;
+      grid-template-columns: 2fr 1fr 0.7fr 0.7fr 0.7fr 1fr;
+      align-items: center;
+      padding: 16px 20px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      gap: 12px;
+    }
+    .roster-item:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 105, 180, 0.15);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+    .roster-item:active {
+      transform: scale(0.995);
+    }
+    @media (max-width: 768px) {
+      .roster-item {
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+    }
+
+    .roster-head {
+      display: grid;
+      grid-template-columns: 2fr 1fr 0.7fr 0.7fr 0.7fr 1fr;
+      padding: 12px 20px;
+      gap: 12px;
+      margin-bottom: 4px;
+    }
+    .roster-head span {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #555;
+    }
+    @media (max-width: 768px) {
+      .roster-head { display: none; }
+    }
+
+    .lawyer-cell {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .lawyer-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 105, 180, 0.3);
+      object-fit: cover;
+    }
+    .lawyer-avatar-placeholder {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(255, 105, 180, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #ff69b4;
+    }
+    .lawyer-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #eee;
+    }
+    .roster-cell {
+      font-size: 0.85rem;
+      color: #999;
+    }
+    .roster-cell strong {
+      color: #ccc;
+      font-weight: 600;
+    }
+
+    /* Status pill */
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+    .status-pill::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+    .pill-active {
+      background: rgba(52, 211, 153, 0.12);
+      color: #34d399;
+    }
+    .pill-active::before { background: #34d399; }
+    .pill-warning {
+      background: rgba(251, 191, 36, 0.12);
+      color: #fbbf24;
+    }
+    .pill-warning::before { background: #fbbf24; }
+    .pill-inactive {
+      background: rgba(248, 113, 113, 0.12);
+      color: #f87171;
+    }
+    .pill-inactive::before { background: #f87171; }
+
+    /* Profile Modal */
     .modal-overlay {
       display: none;
       position: fixed;
       top: 0; left: 0;
       width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       z-index: 100;
       justify-content: center;
       align-items: center;
+      padding: 20px;
     }
     .modal-overlay.active { display: flex; }
     .modal {
-      background: #111;
-      border: 1px solid #ff69b4;
-      border-radius: 16px;
-      padding: 2rem;
-      width: 90%;
-      max-width: 600px;
+      background: rgba(20, 20, 20, 0.95);
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      border: 1px solid rgba(255, 105, 180, 0.2);
+      border-radius: 24px;
+      padding: 32px;
+      width: 100%;
+      max-width: 580px;
       max-height: 85vh;
       overflow-y: auto;
       position: relative;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), 0 0 60px rgba(255, 105, 180, 0.06);
+      animation: modalIn 0.3s ease;
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.95) translateY(10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
     }
     .modal-close {
       position: absolute;
-      top: 1rem;
-      right: 1rem;
-      background: none;
-      border: none;
+      top: 16px; right: 16px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       color: #888;
-      font-size: 1.5rem;
+      font-size: 1.2rem;
+      width: 36px; height: 36px;
+      border-radius: 50%;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
     }
-    .modal-close:hover { color: #ff69b4; }
+    .modal-close:hover {
+      background: rgba(255, 105, 180, 0.15);
+      color: #ff69b4;
+      border-color: rgba(255, 105, 180, 0.3);
+    }
+
     .profile-header {
       display: flex;
       align-items: center;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
+      gap: 16px;
+      margin-bottom: 24px;
     }
-    .profile-header img { width: 64px; height: 64px; border-radius: 50%; border: 2px solid #ff69b4; }
-    .profile-header h2 { color: #ff69b4; }
-    .profile-header .sub { color: #888; font-size: 0.9rem; }
+    .profile-avatar {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      border: 3px solid rgba(255, 105, 180, 0.4);
+      box-shadow: 0 0 20px rgba(255, 105, 180, 0.15);
+    }
+    .profile-name {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .profile-sub {
+      font-size: 0.85rem;
+      color: #666;
+      margin-top: 2px;
+    }
 
-    .profile-stats {
+    .profile-stats-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 0.8rem;
-      margin-bottom: 1.5rem;
+      gap: 10px;
+      margin-bottom: 24px;
     }
-    .profile-stat {
-      background: #1a1a1a;
-      padding: 0.8rem;
-      border-radius: 8px;
+    .profile-stat-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 16px;
       text-align: center;
     }
-    .profile-stat .val { font-size: 1.4rem; font-weight: 700; color: #ff69b4; }
-    .profile-stat .lbl { color: #888; font-size: 0.75rem; margin-top: 0.2rem; }
-
-    .section-title {
+    .profile-stat-val {
+      font-size: 1.6rem;
+      font-weight: 800;
       color: #ff69b4;
-      font-size: 0.9rem;
+      letter-spacing: -0.5px;
+    }
+    .profile-stat-lbl {
+      font-size: 0.65rem;
+      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin: 1rem 0 0.5rem;
+      letter-spacing: 0.8px;
+      color: #555;
+      margin-top: 4px;
     }
-    .activity-list, .notes-list { list-style: none; }
-    .activity-list li, .notes-list li {
-      padding: 8px 12px;
-      background: #1a1a1a;
-      margin-bottom: 4px;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      color: #ccc;
-    }
-    .notes-list li .note-date { color: #ff69b4; font-size: 0.8rem; }
 
-    .loading { text-align: center; padding: 3rem; color: #888; }
+    .profile-section-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #ff69b4;
+      margin: 20px 0 10px;
+    }
+    .profile-list {
+      list-style: none;
+    }
+    .profile-list li {
+      padding: 10px 14px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      margin-bottom: 6px;
+      border-radius: 12px;
+      font-size: 0.83rem;
+      color: #aaa;
+      transition: background 0.2s;
+    }
+    .profile-list li:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .note-date {
+      color: #ff69b4;
+      font-weight: 600;
+      font-size: 0.78rem;
+    }
+
+    /* Loading */
+    .loading-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #444;
+      font-size: 0.9rem;
+    }
+    .loading-spinner {
+      width: 32px; height: 32px;
+      border: 3px solid rgba(255, 105, 180, 0.1);
+      border-top-color: #ff69b4;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #444;
+    }
+    .empty-state p { font-size: 0.9rem; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 105, 180, 0.2);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255, 105, 180, 0.4); }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1>Gavel</h1>
+    <div class="header-brand">
+      <h1>Gavel</h1>
+    </div>
     <div class="header-right">
       <select id="guild-select"></select>
       <div class="user-info">
@@ -219,24 +521,34 @@
   </div>
 
   <div class="container">
-    <div class="stats-bar" id="stats-bar"></div>
+    <div class="stats-grid" id="stats-bar">
+      <div class="stat-card glass"><div class="loading-spinner"></div></div>
+      <div class="stat-card glass"><div class="loading-spinner"></div></div>
+      <div class="stat-card glass"><div class="loading-spinner"></div></div>
+      <div class="stat-card glass"><div class="loading-spinner"></div></div>
+    </div>
+
     <div class="roster-section">
-      <h2>Lawyer Roster</h2>
-      <table class="roster-table">
-        <thead>
-          <tr>
-            <th>Lawyer</th>
-            <th>Last Active</th>
-            <th>Days Inactive</th>
-            <th>7d Messages</th>
-            <th>30d Messages</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody id="roster-body">
-          <tr><td colspan="6" class="loading">Loading...</td></tr>
-        </tbody>
-      </table>
+      <div class="section-header">
+        <h2>Lawyer Roster</h2>
+        <span class="badge" id="roster-count">Loading...</span>
+      </div>
+
+      <div class="roster-head">
+        <span>Lawyer</span>
+        <span>Last Active</span>
+        <span>Days</span>
+        <span>7d Msgs</span>
+        <span>30d Msgs</span>
+        <span>Status</span>
+      </div>
+
+      <div class="roster-grid" id="roster-body">
+        <div class="loading-state">
+          <div class="loading-spinner"></div>
+          Loading roster...
+        </div>
+      </div>
     </div>
   </div>
 
@@ -244,7 +556,12 @@
   <div class="modal-overlay" id="profile-modal">
     <div class="modal">
       <button class="modal-close" onclick="closeModal()">&times;</button>
-      <div id="profile-content"></div>
+      <div id="profile-content">
+        <div class="loading-state">
+          <div class="loading-spinner"></div>
+          Loading profile...
+        </div>
+      </div>
     </div>
   </div>
 
@@ -289,29 +606,43 @@
 
       // Stats
       const total = roster.length;
-      const active = roster.filter(l => l.daysSince !== null && l.daysSince < inactivityDays).length;
+      const active = roster.filter(l => l.daysSince !== null && l.daysSince < Math.floor(inactivityDays / 2)).length;
       const warning = roster.filter(l => l.daysSince !== null && l.daysSince >= Math.floor(inactivityDays / 2) && l.daysSince < inactivityDays).length;
       const inactive = roster.filter(l => l.daysSince === null || l.daysSince >= inactivityDays).length;
 
       document.getElementById('stats-bar').innerHTML = `
-        <div class="stat-card"><div class="stat-value">${total}</div><div class="stat-label">Total Lawyers</div></div>
-        <div class="stat-card"><div class="stat-value" style="color:#2ecc71">${active}</div><div class="stat-label">Active</div></div>
-        <div class="stat-card"><div class="stat-value" style="color:#f1c40f">${warning}</div><div class="stat-label">Warning</div></div>
-        <div class="stat-card"><div class="stat-value" style="color:#e74c3c">${inactive}</div><div class="stat-label">Inactive</div></div>
+        <div class="stat-card glass stat-total">
+          <div class="stat-value">${total}</div>
+          <div class="stat-label">Total Lawyers</div>
+        </div>
+        <div class="stat-card glass stat-active">
+          <div class="stat-value">${active}</div>
+          <div class="stat-label">Active</div>
+        </div>
+        <div class="stat-card glass stat-warning">
+          <div class="stat-value">${warning}</div>
+          <div class="stat-label">Warning</div>
+        </div>
+        <div class="stat-card glass stat-inactive">
+          <div class="stat-value">${inactive}</div>
+          <div class="stat-label">Inactive</div>
+        </div>
       `;
 
-      // Table
-      const tbody = document.getElementById('roster-body');
+      document.getElementById('roster-count').textContent = `${total} lawyer${total !== 1 ? 's' : ''}`;
+
+      // Roster
+      const container = document.getElementById('roster-body');
       if (roster.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="loading">No lawyers on the roster.</td></tr>';
+        container.innerHTML = '<div class="empty-state"><p>No lawyers on the roster.</p></div>';
         return;
       }
 
-      tbody.innerHTML = roster.map(l => {
-        const statusClass = l.daysSince === null ? 'status-red'
-          : l.daysSince >= inactivityDays ? 'status-red'
-          : l.daysSince >= Math.floor(inactivityDays / 2) ? 'status-yellow'
-          : 'status-green';
+      container.innerHTML = roster.map(l => {
+        const pillClass = l.daysSince === null ? 'pill-inactive'
+          : l.daysSince >= inactivityDays ? 'pill-inactive'
+          : l.daysSince >= Math.floor(inactivityDays / 2) ? 'pill-warning'
+          : 'pill-active';
         const statusText = l.daysSince === null ? 'No Activity'
           : l.daysSince >= inactivityDays ? 'Inactive'
           : l.daysSince >= Math.floor(inactivityDays / 2) ? 'Warning'
@@ -320,25 +651,28 @@
           ? new Date(l.lastActive).toLocaleDateString()
           : 'Never';
         const daysText = l.daysSince !== null ? l.daysSince : 'N/A';
+        const initials = l.displayName ? l.displayName.charAt(0).toUpperCase() : '?';
 
-        return `<tr onclick="openProfile('${l.userId}')">
-          <td><div class="lawyer-cell">
-            ${l.avatar ? `<img src="${l.avatar}" alt="">` : ''}
-            <span class="name">${l.displayName}</span>
-          </div></td>
-          <td>${lastActiveText}</td>
-          <td>${daysText}</td>
-          <td>${l.activity7}</td>
-          <td>${l.activity30}</td>
-          <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-        </tr>`;
+        return `<div class="roster-item glass" onclick="openProfile('${l.userId}')">
+          <div class="lawyer-cell">
+            ${l.avatar
+              ? `<img class="lawyer-avatar" src="${l.avatar}" alt="">`
+              : `<div class="lawyer-avatar-placeholder">${initials}</div>`}
+            <span class="lawyer-name">${l.displayName}</span>
+          </div>
+          <div class="roster-cell">${lastActiveText}</div>
+          <div class="roster-cell"><strong>${daysText}</strong></div>
+          <div class="roster-cell"><strong>${l.activity7}</strong></div>
+          <div class="roster-cell"><strong>${l.activity30}</strong></div>
+          <div class="roster-cell"><span class="status-pill ${pillClass}">${statusText}</span></div>
+        </div>`;
       }).join('');
     }
 
     async function openProfile(userId) {
       const modal = document.getElementById('profile-modal');
       const content = document.getElementById('profile-content');
-      content.innerHTML = '<div class="loading">Loading profile...</div>';
+      content.innerHTML = '<div class="loading-state"><div class="loading-spinner"></div>Loading profile...</div>';
       modal.classList.add('active');
 
       const p = await fetch(`/api/profile/${currentGuild}/${userId}`).then(r => r.json());
@@ -349,25 +683,40 @@
 
       let html = `
         <div class="profile-header">
-          ${p.avatar ? `<img src="${p.avatar}" alt="">` : ''}
+          ${p.avatar ? `<img class="profile-avatar" src="${p.avatar}" alt="">` : ''}
           <div>
-            <h2>${p.displayName}</h2>
-            <div class="sub">${p.username}</div>
+            <div class="profile-name">${p.displayName}</div>
+            <div class="profile-sub">${p.username}</div>
           </div>
         </div>
-        <div class="profile-stats">
-          <div class="profile-stat"><div class="val">${p.daysSince !== null ? p.daysSince : 'N/A'}</div><div class="lbl">Days Inactive</div></div>
-          <div class="profile-stat"><div class="val">${p.activity7}</div><div class="lbl">7d Messages</div></div>
-          <div class="profile-stat"><div class="val">${p.activity14}</div><div class="lbl">14d Messages</div></div>
+        <div class="profile-stats-grid">
+          <div class="profile-stat-card">
+            <div class="profile-stat-val">${p.daysSince !== null ? p.daysSince : 'N/A'}</div>
+            <div class="profile-stat-lbl">Days Inactive</div>
+          </div>
+          <div class="profile-stat-card">
+            <div class="profile-stat-val">${p.activity7}</div>
+            <div class="profile-stat-lbl">7d Messages</div>
+          </div>
+          <div class="profile-stat-card">
+            <div class="profile-stat-val">${p.activity14}</div>
+            <div class="profile-stat-lbl">14d Messages</div>
+          </div>
         </div>
-        <div class="profile-stats">
-          <div class="profile-stat"><div class="val">${p.activity30}</div><div class="lbl">30d Messages</div></div>
-          <div class="profile-stat" style="grid-column: span 2"><div class="val" style="font-size:1rem">${lastActiveText}</div><div class="lbl">Last Active</div></div>
+        <div class="profile-stats-grid">
+          <div class="profile-stat-card">
+            <div class="profile-stat-val">${p.activity30}</div>
+            <div class="profile-stat-lbl">30d Messages</div>
+          </div>
+          <div class="profile-stat-card" style="grid-column: span 2">
+            <div class="profile-stat-val" style="font-size:0.95rem">${lastActiveText}</div>
+            <div class="profile-stat-lbl">Last Active</div>
+          </div>
         </div>
       `;
 
       if (p.recent.length > 0) {
-        html += `<div class="section-title">Recent Activity</div><ul class="activity-list">`;
+        html += `<div class="profile-section-title">Recent Activity</div><ul class="profile-list">`;
         p.recent.forEach(r => {
           const time = new Date(r.logged_at).toLocaleString();
           html += `<li>#${r.channel_name} &mdash; ${time}</li>`;
@@ -376,7 +725,7 @@
       }
 
       if (p.notes.length > 0) {
-        html += `<div class="section-title">Notes</div><ul class="notes-list">`;
+        html += `<div class="profile-section-title">Notes</div><ul class="profile-list">`;
         p.notes.forEach(n => {
           const time = new Date(n.created_at).toLocaleDateString();
           html += `<li><span class="note-date">${time}</span> &mdash; ${n.note}</li>`;
@@ -393,6 +742,10 @@
 
     document.getElementById('profile-modal').addEventListener('click', (e) => {
       if (e.target === e.currentTarget) closeModal();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
     });
 
     init();

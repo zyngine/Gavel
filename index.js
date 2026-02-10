@@ -66,12 +66,57 @@ async function checkInactivity() {
   }
 }
 
+// --- Role Sync ---
+async function syncRosterRoles(guild) {
+  try {
+    const roleIds = await db.getRosterRoles(guild.id);
+    if (roleIds.length === 0) return;
+
+    const members = await guild.members.fetch();
+    for (const [, member] of members) {
+      if (member.user.bot) continue;
+      const hasRosterRole = roleIds.some(rid => member.roles.cache.has(rid));
+      const isOnRoster = await db.isLawyer(guild.id, member.id);
+
+      if (hasRosterRole && !isOnRoster) {
+        await db.addLawyer(guild.id, member.id, 'auto-sync');
+      } else if (!hasRosterRole && isOnRoster) {
+        await db.removeLawyer(guild.id, member.id);
+      }
+    }
+  } catch (err) {
+    console.error(`Role sync error for guild ${guild.id}:`, err);
+  }
+}
+
+// Listen for role changes
+client.on('guildMemberUpdate', async (oldMember, newMember) => {
+  if (newMember.user.bot) return;
+  const roleIds = await db.getRosterRoles(newMember.guild.id);
+  if (roleIds.length === 0) return;
+
+  const hadRole = roleIds.some(rid => oldMember.roles.cache.has(rid));
+  const hasRole = roleIds.some(rid => newMember.roles.cache.has(rid));
+
+  if (!hadRole && hasRole) {
+    await db.addLawyer(newMember.guild.id, newMember.id, 'auto-sync');
+  } else if (hadRole && !hasRole) {
+    await db.removeLawyer(newMember.guild.id, newMember.id);
+  }
+});
+
 client.once('ready', async () => {
   await db.initDb();
   console.log(`Gavel is online as ${client.user.tag}`);
 
   // Start the dashboard
   createDashboard(client);
+
+  // Sync roster roles on startup
+  for (const guild of client.guilds.cache.values()) {
+    await syncRosterRoles(guild);
+  }
+  console.log('Roster role sync complete.');
 
   // Check inactivity once daily (every 24 hours)
   setInterval(checkInactivity, 86400000);
@@ -128,6 +173,33 @@ client.on('interactionCreate', async (interaction) => {
       const removed = await db.removeMonitoredChannel(guildId, channel.id);
       if (!removed) return interaction.reply({ content: 'That channel/category is not being monitored.', ephemeral: true });
       return interaction.reply({ content: `Stopped monitoring ${channel}.`, ephemeral: true });
+    }
+
+    if (sub === 'roster-role') {
+      const role = interaction.options.getRole('role');
+      await db.addRosterRole(guildId, role.id);
+      // Sync immediately
+      await syncRosterRoles(interaction.guild);
+      return interaction.reply({ content: `Members with **${role.name}** will now auto-populate the lawyer roster.`, ephemeral: true });
+    }
+
+    if (sub === 'remove-roster-role') {
+      const role = interaction.options.getRole('role');
+      const removed = await db.removeRosterRole(guildId, role.id);
+      if (!removed) return interaction.reply({ content: 'That role is not a roster role.', ephemeral: true });
+      return interaction.reply({ content: `**${role.name}** has been removed from roster roles.`, ephemeral: true });
+    }
+
+    if (sub === 'list-roster-roles') {
+      const roleIds = await db.getRosterRoles(guildId);
+      if (roleIds.length === 0) return interaction.reply({ content: 'No roster roles configured.', ephemeral: true });
+      const list = roleIds.map(id => `<@&${id}>`).join('\n');
+      const embed = new EmbedBuilder()
+        .setTitle('Roster Roles')
+        .setColor(0x3498DB)
+        .setDescription(list)
+        .setFooter({ text: 'Members with these roles are auto-added to the roster' });
+      return interaction.reply({ embeds: [embed], ephemeral: true });
     }
 
     if (sub === 'list-channels') {

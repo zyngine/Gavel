@@ -16,6 +16,13 @@ async function initDb() {
     )
   `);
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS roster_roles (
+      guild_id TEXT NOT NULL,
+      role_id TEXT NOT NULL,
+      PRIMARY KEY (guild_id, role_id)
+    )
+  `);
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS monitored_channels (
       guild_id TEXT NOT NULL,
       channel_id TEXT NOT NULL,
@@ -77,6 +84,24 @@ async function getLawyers(guildId) {
 async function isLawyer(guildId, userId) {
   const res = await pool.query('SELECT 1 FROM lawyers WHERE guild_id = $1 AND user_id = $2', [guildId, userId]);
   return res.rows.length > 0;
+}
+
+// --- Roster Roles ---
+async function addRosterRole(guildId, roleId) {
+  await pool.query(
+    `INSERT INTO roster_roles (guild_id, role_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+    [guildId, roleId]
+  );
+}
+
+async function removeRosterRole(guildId, roleId) {
+  const res = await pool.query('DELETE FROM roster_roles WHERE guild_id = $1 AND role_id = $2', [guildId, roleId]);
+  return res.rowCount > 0;
+}
+
+async function getRosterRoles(guildId) {
+  const res = await pool.query('SELECT role_id FROM roster_roles WHERE guild_id = $1', [guildId]);
+  return res.rows.map(r => r.role_id);
 }
 
 // --- Monitored Channels ---
@@ -201,6 +226,7 @@ async function getInactiveLawyers(guildId, days) {
 
 module.exports = {
   initDb, addLawyer, removeLawyer, getLawyers, isLawyer,
+  addRosterRole, removeRosterRole, getRosterRoles,
   addMonitoredChannel, removeMonitoredChannel, getMonitoredChannels, isChannelMonitored,
   logActivity, getActivityCount, getLastActivity, getRecentActivity,
   addNote, getNotes,
