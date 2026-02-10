@@ -1,10 +1,7 @@
 const { Client, GatewayIntentBits, EmbedBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
-const http = require('http');
+const { createDashboard } = require('./dashboard');
 const db = require('./db');
 require('dotenv').config();
-
-const port = process.env.PORT || 3000;
-http.createServer((req, res) => { res.writeHead(200); res.end('Gavel is running'); }).listen(port);
 
 const client = new Client({
   intents: [
@@ -73,6 +70,9 @@ client.once('ready', async () => {
   await db.initDb();
   console.log(`Gavel is online as ${client.user.tag}`);
 
+  // Start the dashboard
+  createDashboard(client);
+
   // Check inactivity once daily (every 24 hours)
   setInterval(checkInactivity, 86400000);
   // Also run once on startup after a short delay
@@ -103,6 +103,12 @@ client.on('interactionCreate', async (interaction) => {
       const days = interaction.options.getInteger('days');
       await db.setInactivityDays(guildId, days);
       return interaction.reply({ content: `Lawyers will be flagged after **${days} days** of inactivity.`, ephemeral: true });
+    }
+
+    if (sub === 'dashboard-role') {
+      const role = interaction.options.getRole('role');
+      await db.setDashboardRole(guildId, role.id);
+      return interaction.reply({ content: `Dashboard access granted to members with the **${role.name}** role.`, ephemeral: true });
     }
 
     if (sub === 'add-channel') {

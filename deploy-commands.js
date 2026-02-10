@@ -43,6 +43,11 @@ const commands = [
     .addSubcommand(sub =>
       sub.setName('list-channels')
         .setDescription('List all monitored channels and categories')
+    )
+    .addSubcommand(sub =>
+      sub.setName('dashboard-role')
+        .setDescription('Set which role can access the web dashboard')
+        .addRoleOption(opt => opt.setName('role').setDescription('The role that grants dashboard access').setRequired(true))
     ),
   new SlashCommandBuilder()
     .setName('lawyer')

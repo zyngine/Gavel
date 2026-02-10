@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gavel - Login</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0a0a;
+      color: #fff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .login-container {
+      text-align: center;
+      padding: 3rem;
+      background: #111;
+      border-radius: 16px;
+      border: 1px solid #ff69b4;
+      box-shadow: 0 0 40px rgba(255, 105, 180, 0.15);
+    }
+    h1 {
+      font-size: 3rem;
+      color: #ff69b4;
+      margin-bottom: 0.5rem;
+    }
+    .subtitle {
+      color: #888;
+      margin-bottom: 2rem;
+      font-size: 1.1rem;
+    }
+    .login-btn {
+      display: inline-block;
+      padding: 14px 40px;
+      background: #ff69b4;
+      color: #000;
+      text-decoration: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .login-btn:hover {
+      background: #ff85c8;
+      box-shadow: 0 0 20px rgba(255, 105, 180, 0.4);
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h1>Gavel</h1>
+    <p class="subtitle">DOJ Lawyer Activity Dashboard</p>
+    <a href="/auth/login" class="login-btn">Login with Discord</a>
+  </div>
+</body>
+</html>

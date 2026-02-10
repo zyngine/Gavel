@@ -47,9 +47,11 @@ async function initDb() {
     CREATE TABLE IF NOT EXISTS guild_config (
       guild_id TEXT PRIMARY KEY,
       alert_channel_id TEXT,
-      inactivity_days INTEGER DEFAULT 7
+      inactivity_days INTEGER DEFAULT 7,
+      dashboard_role_id TEXT
     )
   `);
+  await pool.query(`ALTER TABLE guild_config ADD COLUMN IF NOT EXISTS dashboard_role_id TEXT`).catch(() => {});
   console.log('Database tables ready.');
 }
 
@@ -167,6 +169,14 @@ async function setAlertChannel(guildId, channelId) {
   );
 }
 
+async function setDashboardRole(guildId, roleId) {
+  await pool.query(
+    `INSERT INTO guild_config (guild_id, dashboard_role_id) VALUES ($1, $2)
+     ON CONFLICT (guild_id) DO UPDATE SET dashboard_role_id = $2`,
+    [guildId, roleId]
+  );
+}
+
 async function setInactivityDays(guildId, days) {
   await pool.query(
     `INSERT INTO guild_config (guild_id, inactivity_days) VALUES ($1, $2)
@@ -194,5 +204,5 @@ module.exports = {
   addMonitoredChannel, removeMonitoredChannel, getMonitoredChannels, isChannelMonitored,
   logActivity, getActivityCount, getLastActivity, getRecentActivity,
   addNote, getNotes,
-  getGuildConfig, setAlertChannel, setInactivityDays, getInactiveLawyers
+  getGuildConfig, setAlertChannel, setDashboardRole, setInactivityDays, getInactiveLawyers
 };

@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gavel - Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0a0a;
+      color: #e0e0e0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .header {
+      background: #111;
+      border-bottom: 2px solid #ff69b4;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .header h1 { color: #ff69b4; font-size: 1.5rem; }
+    .header-right { display: flex; align-items: center; gap: 1rem; }
+    .header-right select {
+      background: #1a1a1a;
+      color: #e0e0e0;
+      border: 1px solid #333;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #aaa;
+    }
+    .user-info img { width: 28px; height: 28px; border-radius: 50%; }
+    .logout-btn {
+      color: #ff69b4;
+      text-decoration: none;
+      font-size: 0.85rem;
+    }
+
+    /* Main content */
+    .container { max-width: 1100px; margin: 2rem auto; padding: 0 1.5rem; }
+
+    /* Stats bar */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 10px;
+      padding: 1.2rem;
+      text-align: center;
+    }
+    .stat-card .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #ff69b4;
+    }
+    .stat-card .stat-label {
+      color: #888;
+      font-size: 0.85rem;
+      margin-top: 0.3rem;
+    }
+
+    /* Roster table */
+    .roster-section h2 {
+      color: #ff69b4;
+      margin-bottom: 1rem;
+      font-size: 1.3rem;
+    }
+    .roster-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #111;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .roster-table th {
+      background: #1a1a1a;
+      color: #ff69b4;
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .roster-table td {
+      padding: 12px 16px;
+      border-top: 1px solid #1a1a1a;
+    }
+    .roster-table tr:hover td { background: #1a1a1a; }
+    .roster-table tr { cursor: pointer; }
+
+    .lawyer-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .lawyer-cell img {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+    }
+    .lawyer-cell .name { font-weight: 500; }
+
+    .status-badge {
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    .status-green { background: rgba(46, 204, 113, 0.15); color: #2ecc71; }
+    .status-yellow { background: rgba(241, 196, 15, 0.15); color: #f1c40f; }
+    .status-red { background: rgba(231, 76, 60, 0.15); color: #e74c3c; }
+
+    /* Profile modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: #111;
+      border: 1px solid #ff69b4;
+      border-radius: 16px;
+      padding: 2rem;
+      width: 90%;
+      max-width: 600px;
+      max-height: 85vh;
+      overflow-y: auto;
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      color: #888;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+    .modal-close:hover { color: #ff69b4; }
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .profile-header img { width: 64px; height: 64px; border-radius: 50%; border: 2px solid #ff69b4; }
+    .profile-header h2 { color: #ff69b4; }
+    .profile-header .sub { color: #888; font-size: 0.9rem; }
+
+    .profile-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.8rem;
+      margin-bottom: 1.5rem;
+    }
+    .profile-stat {
+      background: #1a1a1a;
+      padding: 0.8rem;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .profile-stat .val { font-size: 1.4rem; font-weight: 700; color: #ff69b4; }
+    .profile-stat .lbl { color: #888; font-size: 0.75rem; margin-top: 0.2rem; }
+
+    .section-title {
+      color: #ff69b4;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 1rem 0 0.5rem;
+    }
+    .activity-list, .notes-list { list-style: none; }
+    .activity-list li, .notes-list li {
+      padding: 8px 12px;
+      background: #1a1a1a;
+      margin-bottom: 4px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      color: #ccc;
+    }
+    .notes-list li .note-date { color: #ff69b4; font-size: 0.8rem; }
+
+    .loading { text-align: center; padding: 3rem; color: #888; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Gavel</h1>
+    <div class="header-right">
+      <select id="guild-select"></select>
+      <div class="user-info">
+        <img id="user-avatar" src="" alt="">
+        <span id="user-name"></span>
+        <a href="/auth/logout" class="logout-btn">Logout</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="stats-bar" id="stats-bar"></div>
+    <div class="roster-section">
+      <h2>Lawyer Roster</h2>
+      <table class="roster-table">
+        <thead>
+          <tr>
+            <th>Lawyer</th>
+            <th>Last Active</th>
+            <th>Days Inactive</th>
+            <th>7d Messages</th>
+            <th>30d Messages</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="roster-body">
+          <tr><td colspan="6" class="loading">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Profile Modal -->
+  <div class="modal-overlay" id="profile-modal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+      <div id="profile-content"></div>
+    </div>
+  </div>
+
+  <script>
+    let currentGuild = null;
+    let inactivityDays = 7;
+
+    async function init() {
+      const me = await fetch('/api/me').then(r => r.json());
+      document.getElementById('user-name').textContent = me.username;
+      if (me.avatar) {
+        document.getElementById('user-avatar').src = `https://cdn.discordapp.com/avatars/${me.id}/${me.avatar}.png?size=64`;
+      }
+
+      const guilds = await fetch('/api/guilds').then(r => r.json());
+      const select = document.getElementById('guild-select');
+
+      guilds.forEach(g => {
+        const opt = document.createElement('option');
+        opt.value = g.id;
+        opt.textContent = g.name;
+        select.appendChild(opt);
+      });
+
+      if (guilds.length > 0) {
+        currentGuild = guilds[0].id;
+        loadRoster();
+      }
+
+      select.addEventListener('change', () => {
+        currentGuild = select.value;
+        loadRoster();
+      });
+    }
+
+    async function loadRoster() {
+      if (!currentGuild) return;
+
+      const data = await fetch(`/api/roster/${currentGuild}`).then(r => r.json());
+      inactivityDays = data.inactivityDays;
+      const roster = data.roster;
+
+      // Stats
+      const total = roster.length;
+      const active = roster.filter(l => l.daysSince !== null && l.daysSince < inactivityDays).length;
+      const warning = roster.filter(l => l.daysSince !== null && l.daysSince >= Math.floor(inactivityDays / 2) && l.daysSince < inactivityDays).length;
+      const inactive = roster.filter(l => l.daysSince === null || l.daysSince >= inactivityDays).length;
+
+      document.getElementById('stats-bar').innerHTML = `
+        <div class="stat-card"><div class="stat-value">${total}</div><div class="stat-label">Total Lawyers</div></div>
+        <div class="stat-card"><div class="stat-value" style="color:#2ecc71">${active}</div><div class="stat-label">Active</div></div>
+        <div class="stat-card"><div class="stat-value" style="color:#f1c40f">${warning}</div><div class="stat-label">Warning</div></div>
+        <div class="stat-card"><div class="stat-value" style="color:#e74c3c">${inactive}</div><div class="stat-label">Inactive</div></div>
+      `;
+
+      // Table
+      const tbody = document.getElementById('roster-body');
+      if (roster.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="loading">No lawyers on the roster.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = roster.map(l => {
+        const statusClass = l.daysSince === null ? 'status-red'
+          : l.daysSince >= inactivityDays ? 'status-red'
+          : l.daysSince >= Math.floor(inactivityDays / 2) ? 'status-yellow'
+          : 'status-green';
+        const statusText = l.daysSince === null ? 'No Activity'
+          : l.daysSince >= inactivityDays ? 'Inactive'
+          : l.daysSince >= Math.floor(inactivityDays / 2) ? 'Warning'
+          : 'Active';
+        const lastActiveText = l.lastActive
+          ? new Date(l.lastActive).toLocaleDateString()
+          : 'Never';
+        const daysText = l.daysSince !== null ? l.daysSince : 'N/A';
+
+        return `<tr onclick="openProfile('${l.userId}')">
+          <td><div class="lawyer-cell">
+            ${l.avatar ? `<img src="${l.avatar}" alt="">` : ''}
+            <span class="name">${l.displayName}</span>
+          </div></td>
+          <td>${lastActiveText}</td>
+          <td>${daysText}</td>
+          <td>${l.activity7}</td>
+          <td>${l.activity30}</td>
+          <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+        </tr>`;
+      }).join('');
+    }
+
+    async function openProfile(userId) {
+      const modal = document.getElementById('profile-modal');
+      const content = document.getElementById('profile-content');
+      content.innerHTML = '<div class="loading">Loading profile...</div>';
+      modal.classList.add('active');
+
+      const p = await fetch(`/api/profile/${currentGuild}/${userId}`).then(r => r.json());
+
+      const lastActiveText = p.lastActive
+        ? new Date(p.lastActive).toLocaleString()
+        : 'Never';
+
+      let html = `
+        <div class="profile-header">
+          ${p.avatar ? `<img src="${p.avatar}" alt="">` : ''}
+          <div>
+            <h2>${p.displayName}</h2>
+            <div class="sub">${p.username}</div>
+          </div>
+        </div>
+        <div class="profile-stats">
+          <div class="profile-stat"><div class="val">${p.daysSince !== null ? p.daysSince : 'N/A'}</div><div class="lbl">Days Inactive</div></div>
+          <div class="profile-stat"><div class="val">${p.activity7}</div><div class="lbl">7d Messages</div></div>
+          <div class="profile-stat"><div class="val">${p.activity14}</div><div class="lbl">14d Messages</div></div>
+        </div>
+        <div class="profile-stats">
+          <div class="profile-stat"><div class="val">${p.activity30}</div><div class="lbl">30d Messages</div></div>
+          <div class="profile-stat" style="grid-column: span 2"><div class="val" style="font-size:1rem">${lastActiveText}</div><div class="lbl">Last Active</div></div>
+        </div>
+      `;
+
+      if (p.recent.length > 0) {
+        html += `<div class="section-title">Recent Activity</div><ul class="activity-list">`;
+        p.recent.forEach(r => {
+          const time = new Date(r.logged_at).toLocaleString();
+          html += `<li>#${r.channel_name} &mdash; ${time}</li>`;
+        });
+        html += '</ul>';
+      }
+
+      if (p.notes.length > 0) {
+        html += `<div class="section-title">Notes</div><ul class="notes-list">`;
+        p.notes.forEach(n => {
+          const time = new Date(n.created_at).toLocaleDateString();
+          html += `<li><span class="note-date">${time}</span> &mdash; ${n.note}</li>`;
+        });
+        html += '</ul>';
+      }
+
+      content.innerHTML = html;
+    }
+
+    function closeModal() {
+      document.getElementById('profile-modal').classList.remove('active');
+    }
+
+    document.getElementById('profile-modal').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) closeModal();
+    });
+
+    init();
+  </script>
+</body>
+</html>
