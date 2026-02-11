@@ -98,6 +98,7 @@ const commands = [
         .setDescription('Add a lawyer to the roster')
         .addUserOption(opt => opt.setName('user').setDescription('The lawyer to add').setRequired(true))
         .addStringOption(opt => opt.setName('name').setDescription('Real name of the lawyer').setRequired(false))
+        .addStringOption(opt => opt.setName('rank').setDescription('Rank or title of the lawyer').setRequired(false))
     )
     .addSubcommand(sub =>
       sub.setName('remove')

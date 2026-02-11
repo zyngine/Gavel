@@ -238,6 +238,7 @@ function createDashboard(client) {
             avatar: member ? member.user.displayAvatarURL({ size: 64 }) : null,
             addedAt: l.added_at,
             hireDate: l.hire_date,
+            rank: l.rank || null,
             lastActive,
             daysSince,
             activity7,
@@ -255,6 +256,7 @@ function createDashboard(client) {
             avatar: null,
             addedAt: l.added_at,
             hireDate: l.hire_date,
+            rank: l.rank || null,
             lastActive: null,
             daysSince: null,
             activity7: 0,
@@ -309,6 +311,23 @@ function createDashboard(client) {
       res.json({ success: true });
     } catch (err) {
       console.error('Update display name error:', err);
+      res.status(500).json({ error: 'Failed to update' });
+    }
+  });
+
+  // --- Edit rank ---
+  app.put('/api/roster/:guildId/:userId/rank', requireApiAuth, async (req, res) => {
+    const { guildId, userId } = req.params;
+    if (!req.authorizedGuilds.find(g => g.id === guildId)) {
+      return res.status(403).json({ error: 'Not authorized for this guild' });
+    }
+    const { rank } = req.body;
+
+    try {
+      await db.updateRank(guildId, userId, rank ? rank.trim() : null);
+      res.json({ success: true });
+    } catch (err) {
+      console.error('Update rank error:', err);
       res.status(500).json({ error: 'Failed to update' });
     }
   });

@@ -89,6 +89,7 @@ async function initDb() {
   await pool.query(`ALTER TABLE lawyers ADD COLUMN IF NOT EXISTS archived BOOLEAN DEFAULT FALSE`).catch(() => {});
   await pool.query(`ALTER TABLE lawyers ADD COLUMN IF NOT EXISTS archived_at TIMESTAMPTZ`).catch(() => {});
   await pool.query(`ALTER TABLE lawyers ADD COLUMN IF NOT EXISTS archived_by TEXT`).catch(() => {});
+  await pool.query(`ALTER TABLE lawyers ADD COLUMN IF NOT EXISTS rank TEXT`).catch(() => {});
   await pool.query(`ALTER TABLE guild_config ADD COLUMN IF NOT EXISTS dashboard_role_id TEXT`).catch(() => {});
 
   // Backfill hire_date from added_at
@@ -106,15 +107,16 @@ async function initDb() {
 }
 
 // --- Lawyers ---
-async function addLawyer(guildId, userId, addedBy, displayName) {
+async function addLawyer(guildId, userId, addedBy, displayName, rank) {
   await pool.query(
-    `INSERT INTO lawyers (guild_id, user_id, added_by, display_name, hire_date)
-     VALUES ($1, $2, $3, $4, NOW())
+    `INSERT INTO lawyers (guild_id, user_id, added_by, display_name, hire_date, rank)
+     VALUES ($1, $2, $3, $4, NOW(), $5)
      ON CONFLICT (guild_id, user_id) DO UPDATE SET
        archived = FALSE, archived_at = NULL, archived_by = NULL,
        added_by = $3, added_at = NOW(), hire_date = COALESCE(lawyers.hire_date, NOW()),
-       display_name = COALESCE($4, lawyers.display_name)`,
-    [guildId, userId, addedBy, displayName || null]
+       display_name = COALESCE($4, lawyers.display_name),
+       rank = COALESCE($5, lawyers.rank)`,
+    [guildId, userId, addedBy, displayName || null, rank || null]
   );
 }
 
@@ -162,6 +164,13 @@ async function updateDisplayName(guildId, userId, displayName) {
   await pool.query(
     'UPDATE lawyers SET display_name = $3 WHERE guild_id = $1 AND user_id = $2',
     [guildId, userId, displayName]
+  );
+}
+
+async function updateRank(guildId, userId, rank) {
+  await pool.query(
+    'UPDATE lawyers SET rank = $3 WHERE guild_id = $1 AND user_id = $2',
+    [guildId, userId, rank]
   );
 }
 
@@ -399,7 +408,7 @@ async function getInactiveLawyers(guildId, days) {
 
 module.exports = {
   initDb, addLawyer, archiveLawyer, getLawyers, getArchivedLawyers, isLawyer,
-  updateHireDate, updateDisplayName,
+  updateHireDate, updateDisplayName, updateRank,
   addRosterRole, removeRosterRole, getRosterRoles,
   addDashboardRole, removeDashboardRole, getDashboardRoles,
   addMonitoredChannel, removeMonitoredChannel, getMonitoredChannels, isChannelMonitored,

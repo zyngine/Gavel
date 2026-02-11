@@ -273,9 +273,11 @@ client.on('interactionCreate', async (interaction) => {
 
       const user = interaction.options.getUser('user');
       const name = interaction.options.getString('name');
-      await db.addLawyer(guildId, user.id, interaction.user.id, name);
+      const rank = interaction.options.getString('rank');
+      await db.addLawyer(guildId, user.id, interaction.user.id, name, rank);
       const nameText = name ? ` (${name})` : '';
-      return interaction.reply({ content: `**${user.tag}**${nameText} has been added to the lawyer roster.`, ephemeral: true });
+      const rankText = rank ? ` — ${rank}` : '';
+      return interaction.reply({ content: `**${user.tag}**${nameText}${rankText} has been added to the lawyer roster.`, ephemeral: true });
     }
 
     // --- /lawyer remove ---
@@ -307,7 +309,8 @@ client.on('interactionCreate', async (interaction) => {
           status = daysAgo === 0 ? 'Active today' : `${daysAgo} day${daysAgo === 1 ? '' : 's'} ago`;
         }
         const name = l.display_name ? `${l.display_name} (<@${l.user_id}>)` : `<@${l.user_id}>`;
-        lines.push(`${name} — Last active: **${status}**`);
+        const rankTag = l.rank ? ` [${l.rank}]` : '';
+        lines.push(`${name}${rankTag} — Last active: **${status}**`);
       }
 
       const embed = new EmbedBuilder()
@@ -324,7 +327,9 @@ client.on('interactionCreate', async (interaction) => {
       const user = interaction.options.getUser('user');
       await interaction.deferReply({ ephemeral: true });
 
-      if (!(await db.isLawyer(guildId, user.id))) {
+      const lawyers = await db.getLawyers(guildId);
+      const lawyerRecord = lawyers.find(l => l.user_id === user.id);
+      if (!lawyerRecord) {
         return interaction.editReply({ content: `**${user.tag}** is not on the roster.` });
       }
 
@@ -348,8 +353,9 @@ client.on('interactionCreate', async (interaction) => {
         daysSince = `${daysAgo} day${daysAgo === 1 ? '' : 's'}`;
       }
 
+      const titleText = lawyerRecord.rank ? `${user.tag} — ${lawyerRecord.rank}` : user.tag;
       const embed = new EmbedBuilder()
-        .setTitle(`${user.tag}`)
+        .setTitle(titleText)
         .setThumbnail(user.displayAvatarURL())
         .setColor(0x3498DB)
         .addFields(
