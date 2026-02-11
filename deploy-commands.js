@@ -113,6 +113,11 @@ const commands = [
         .addUserOption(opt => opt.setName('user').setDescription('The lawyer to add').setRequired(true))
         .addStringOption(opt => opt.setName('name').setDescription('Real name of the lawyer').setRequired(false))
         .addStringOption(opt => opt.setName('rank').setDescription('Rank or title of the lawyer').setRequired(false))
+        .addRoleOption(opt => opt.setName('role1').setDescription('Role to assign').setRequired(false))
+        .addRoleOption(opt => opt.setName('role2').setDescription('Role to assign').setRequired(false))
+        .addRoleOption(opt => opt.setName('role3').setDescription('Role to assign').setRequired(false))
+        .addRoleOption(opt => opt.setName('role4').setDescription('Role to assign').setRequired(false))
+        .addRoleOption(opt => opt.setName('role5').setDescription('Role to assign').setRequired(false))
     )
     .addSubcommand(sub =>
       sub.setName('remove')

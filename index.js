@@ -305,10 +305,34 @@ client.on('interactionCreate', async (interaction) => {
       const user = interaction.options.getUser('user');
       const name = interaction.options.getString('name');
       const rank = interaction.options.getString('rank');
+
+      // Collect roles to assign
+      const rolesToAssign = [];
+      for (let i = 1; i <= 5; i++) {
+        const role = interaction.options.getRole(`role${i}`);
+        if (role) rolesToAssign.push(role);
+      }
+
       await db.addLawyer(guildId, user.id, interaction.user.id, name, rank);
+
+      // Assign Discord roles
+      const member = await interaction.guild.members.fetch(user.id).catch(() => null);
+      const assignedRoles = [];
+      if (member && rolesToAssign.length > 0) {
+        for (const role of rolesToAssign) {
+          try {
+            await member.roles.add(role);
+            assignedRoles.push(role.name);
+          } catch (err) {
+            console.error(`Failed to assign role ${role.name} to ${user.tag}:`, err.message);
+          }
+        }
+      }
+
       const nameText = name ? ` (${name})` : '';
       const rankText = rank ? ` — ${rank}` : '';
-      return interaction.reply({ content: `**${user.tag}**${nameText}${rankText} has been added to the lawyer roster.`, ephemeral: true });
+      const rolesText = assignedRoles.length > 0 ? `\nRoles assigned: **${assignedRoles.join('**, **')}**` : '';
+      return interaction.reply({ content: `**${user.tag}**${nameText}${rankText} has been added to the lawyer roster.${rolesText}`, ephemeral: true });
     }
 
     // --- /lawyer remove ---
