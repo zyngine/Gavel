@@ -124,6 +124,12 @@ client.once('ready', async () => {
   setTimeout(checkInactivity, 10000);
 });
 
+async function hasCommandAccess(member, guildId) {
+  if (member.permissions.has(PermissionFlagsBits.ManageGuild)) return true;
+  const commandRoleIds = await db.getCommandRoles(guildId);
+  return member.roles.cache.some(r => commandRoleIds.includes(r.id));
+}
+
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.guild || !interaction.isChatInputCommand()) return;
 
@@ -259,6 +265,31 @@ client.on('interactionCreate', async (interaction) => {
         .setDescription(list);
       return interaction.reply({ embeds: [embed], ephemeral: true });
     }
+
+    if (sub === 'add-command-role') {
+      const role = interaction.options.getRole('role');
+      await db.addCommandRole(guildId, role.id);
+      return interaction.reply({ content: `**${role.name}** can now use bot commands (lawyer/strike).`, ephemeral: true });
+    }
+
+    if (sub === 'remove-command-role') {
+      const role = interaction.options.getRole('role');
+      const removed = await db.removeCommandRole(guildId, role.id);
+      if (!removed) return interaction.reply({ content: 'That role does not have command access.', ephemeral: true });
+      return interaction.reply({ content: `**${role.name}** no longer has bot command access.`, ephemeral: true });
+    }
+
+    if (sub === 'list-command-roles') {
+      const roleIds = await db.getCommandRoles(guildId);
+      if (roleIds.length === 0) return interaction.reply({ content: 'No command roles configured. Only users with Manage Server can use restricted commands.', ephemeral: true });
+      const list = roleIds.map(id => `<@&${id}>`).join('\n');
+      const embed = new EmbedBuilder()
+        .setTitle('Command Roles')
+        .setColor(0x3498DB)
+        .setDescription(list)
+        .setFooter({ text: 'Members with these roles can use /lawyer and /strike commands' });
+      return interaction.reply({ embeds: [embed], ephemeral: true });
+    }
   }
 
   // ==================== /lawyer ====================
@@ -267,8 +298,8 @@ client.on('interactionCreate', async (interaction) => {
 
     // --- /lawyer add ---
     if (sub === 'add') {
-      if (!interaction.member.permissions.has(PermissionFlagsBits.ManageGuild)) {
-        return interaction.reply({ content: 'You need **Manage Server** permission.', ephemeral: true });
+      if (!(await hasCommandAccess(interaction.member, guildId))) {
+        return interaction.reply({ content: 'You don\'t have permission to use this command.', ephemeral: true });
       }
 
       const user = interaction.options.getUser('user');
@@ -282,8 +313,8 @@ client.on('interactionCreate', async (interaction) => {
 
     // --- /lawyer remove ---
     if (sub === 'remove') {
-      if (!interaction.member.permissions.has(PermissionFlagsBits.ManageGuild)) {
-        return interaction.reply({ content: 'You need **Manage Server** permission.', ephemeral: true });
+      if (!(await hasCommandAccess(interaction.member, guildId))) {
+        return interaction.reply({ content: 'You don\'t have permission to use this command.', ephemeral: true });
       }
 
       const user = interaction.options.getUser('user');
@@ -396,8 +427,8 @@ client.on('interactionCreate', async (interaction) => {
 
     // --- /lawyer note ---
     if (sub === 'note') {
-      if (!interaction.member.permissions.has(PermissionFlagsBits.ManageGuild)) {
-        return interaction.reply({ content: 'You need **Manage Server** permission.', ephemeral: true });
+      if (!(await hasCommandAccess(interaction.member, guildId))) {
+        return interaction.reply({ content: 'You don\'t have permission to use this command.', ephemeral: true });
       }
 
       const user = interaction.options.getUser('user');
@@ -459,13 +490,12 @@ client.on('interactionCreate', async (interaction) => {
 
   // ==================== /strike ====================
   if (commandName === 'strike') {
-    if (!interaction.member.permissions.has(PermissionFlagsBits.ManageGuild)) {
-      return interaction.reply({ content: 'You need **Manage Server** permission.', ephemeral: true });
-    }
-
     const sub = interaction.options.getSubcommand();
 
     if (sub === 'add') {
+      if (!(await hasCommandAccess(interaction.member, guildId))) {
+        return interaction.reply({ content: 'You don\'t have permission to use this command.', ephemeral: true });
+      }
       const user = interaction.options.getUser('user');
       const reason = interaction.options.getString('reason');
 
@@ -478,6 +508,9 @@ client.on('interactionCreate', async (interaction) => {
     }
 
     if (sub === 'remove') {
+      if (!(await hasCommandAccess(interaction.member, guildId))) {
+        return interaction.reply({ content: 'You don\'t have permission to use this command.', ephemeral: true });
+      }
       const id = interaction.options.getInteger('id');
       const removed = await db.removeStrike(id, guildId);
       if (!removed) return interaction.reply({ content: `Strike #${id} not found.`, ephemeral: true });

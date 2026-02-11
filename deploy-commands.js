@@ -89,6 +89,20 @@ const commands = [
     .addSubcommand(sub =>
       sub.setName('list-ticket-categories')
         .setDescription('List all ticket tracking categories')
+    )
+    .addSubcommand(sub =>
+      sub.setName('add-command-role')
+        .setDescription('Grant a role access to bot commands (lawyer/strike)')
+        .addRoleOption(opt => opt.setName('role').setDescription('The role to grant command access').setRequired(true))
+    )
+    .addSubcommand(sub =>
+      sub.setName('remove-command-role')
+        .setDescription('Revoke a role\'s access to bot commands')
+        .addRoleOption(opt => opt.setName('role').setDescription('The role to revoke').setRequired(true))
+    )
+    .addSubcommand(sub =>
+      sub.setName('list-command-roles')
+        .setDescription('List all roles with bot command access')
     ),
   new SlashCommandBuilder()
     .setName('lawyer')

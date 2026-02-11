@@ -83,6 +83,14 @@ async function initDb() {
     )
   `);
 
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS command_roles (
+      guild_id TEXT NOT NULL,
+      role_id TEXT NOT NULL,
+      PRIMARY KEY (guild_id, role_id)
+    )
+  `);
+
   // New columns on lawyers
   await pool.query(`ALTER TABLE lawyers ADD COLUMN IF NOT EXISTS display_name TEXT`).catch(() => {});
   await pool.query(`ALTER TABLE lawyers ADD COLUMN IF NOT EXISTS hire_date TIMESTAMPTZ`).catch(() => {});
@@ -369,6 +377,24 @@ async function getTicketCategories(guildId) {
   return res.rows.map(r => r.category_id);
 }
 
+// --- Command Roles ---
+async function addCommandRole(guildId, roleId) {
+  await pool.query(
+    `INSERT INTO command_roles (guild_id, role_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+    [guildId, roleId]
+  );
+}
+
+async function removeCommandRole(guildId, roleId) {
+  const res = await pool.query('DELETE FROM command_roles WHERE guild_id = $1 AND role_id = $2', [guildId, roleId]);
+  return res.rowCount > 0;
+}
+
+async function getCommandRoles(guildId) {
+  const res = await pool.query('SELECT role_id FROM command_roles WHERE guild_id = $1', [guildId]);
+  return res.rows.map(r => r.role_id);
+}
+
 // --- Guild Config ---
 async function getGuildConfig(guildId) {
   const res = await pool.query('SELECT * FROM guild_config WHERE guild_id = $1', [guildId]);
@@ -416,5 +442,6 @@ module.exports = {
   addNote, getNotes,
   addStrike, removeStrike, getStrikes, getStrikeCount,
   addTicketCategory, removeTicketCategory, getTicketCategories,
+  addCommandRole, removeCommandRole, getCommandRoles,
   getGuildConfig, setAlertChannel, setInactivityDays, getInactiveLawyers
 };
